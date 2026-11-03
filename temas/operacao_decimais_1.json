@@ -7,9 +7,9 @@
       "titulo": "Adição e subtração com 1 casa decimal",
       "naves": 6,
       "vidas": 3,
-      "intervaloMs": 28000,
-      "quedaMs": 28000,
-      "quedaFacilMs": 35000,
+      "intervaloMs": 45000,
+      "quedaMs": 45000,
+      "quedaFacilMs": 55000,
       "resultadoNaoNegativo": true,
       "modelos": [
         { "id": "1A", "operacao": "+", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.1, "max": 9.9, "casas": 1 } },
@@ -21,9 +21,9 @@
       "titulo": "Adição e subtração com decimais variados",
       "naves": 6,
       "vidas": 3,
-      "intervaloMs": 32000,
-      "quedaMs": 32000,
-      "quedaFacilMs": 40000,
+      "intervaloMs": 50000,
+      "quedaMs": 50000,
+      "quedaFacilMs": 60000,
       "resultadoNaoNegativo": true,
       "modelos": [
         { "id": "2A", "operacao": "+", "a": { "min": 0.1, "max": 9.9, "casas": 1 }, "b": { "min": 0.01, "max": 0.99, "casas": 2 } },
@@ -37,9 +37,9 @@
       "titulo": "Multiplicação: decimal × inteiro",
       "naves": 6,
       "vidas": 3,
-      "intervaloMs": 35000,
-      "quedaMs": 35000,
-      "quedaFacilMs": 42000,
+      "intervaloMs": 55000,
+      "quedaMs": 55000,
+      "quedaFacilMs": 65000,
       "modelos": [
         { "id": "3A", "operacao": "*", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 2, "max": 9, "casas": 0 } },
         { "id": "3B", "operacao": "*", "a": { "min": 0.10, "max": 0.99, "casas": 2 }, "b": { "min": 2, "max": 9, "casas": 0 } }
@@ -50,9 +50,9 @@
       "titulo": "Multiplicação: decimal × decimal",
       "naves": 6,
       "vidas": 3,
-      "intervaloMs": 38000,
-      "quedaMs": 38000,
-      "quedaFacilMs": 45000,
+      "intervaloMs": 60000,
+      "quedaMs": 60000,
+      "quedaFacilMs": 70000,
       "modelos": [
         { "id": "4A", "operacao": "*", "a": { "min": 0.1, "max": 2.9, "casas": 1 }, "b": { "min": 0.1, "max": 2.9, "casas": 1 } },
         { "id": "4B", "operacao": "*", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.1, "max": 0.9, "casas": 1 } }
