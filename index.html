@@ -33,7 +33,6 @@
   .btn-verde { background: #22c55e; color: #052e16; }
   .btn-cinza { background: #475569; color: #fff; }
 
-  /* Correção do botão sobreposto */
   #btn-start { position: relative; z-index: 10; margin-bottom: 20px; }
 
   .nave-inicio { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); width: 240px; height: 58px; z-index: 1; }
@@ -155,16 +154,6 @@
   /* ---------- Utilidades ---------- */
   const ri = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
   const pot = c => Math.pow(10, c);
-  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-
-  function embaralhar(arr) {
-    const r = arr.slice();
-    for (let i = r.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [r[i], r[j]] = [r[j], r[i]];
-    }
-    return r;
-  }
 
   function status(texto, cor) {
     $('status').textContent = texto;
@@ -186,18 +175,7 @@
   function validarFase(f) {
     const erros = [];
     if (!f || typeof f !== 'object') return ['fase inválida'];
-    if (!(f.naves > 0)) erros.push('"naves"');
-    if (!(f.vidas > 0)) erros.push('"vidas"');
-    if (!(f.intervaloMs > 0)) erros.push('"intervaloMs"');
-    if (!(f.quedaMs > 0)) erros.push('"quedaMs"');
     if (!Array.isArray(f.modelos) || !f.modelos.length) erros.push('"modelos"');
-    (f.modelos || []).forEach(m => {
-      if (!SIMBOLO[m.operacao]) erros.push('operação inválida em ' + m.id);
-      ['a', 'b'].forEach(k => {
-        const v = m[k];
-        if (!v || !(v.min <= v.max) || !Number.isInteger(v.casas ?? 0)) erros.push('faixa ' + k + ' em ' + m.id);
-      });
-    });
     return erros;
   }
 
@@ -302,20 +280,12 @@
 
   function montarSequencia() {
     const mods = FASE.modelos;
-    if (FASE.distribuicao) {
-      const seq = [];
-      Object.entries(FASE.distribuicao).forEach(([id, qtd]) => {
-        const idx = mods.findIndex(m => m.id === id);
-        for (let i = 0; i < qtd; i++) seq.push(idx);
-      });
-      return embaralhar(seq);
-    }
-    return embaralhar(Array.from({ length: FASE.naves }, (_, i) => i % mods.length));
+    return Array.from({ length: FASE.naves }, (_, i) => i % mods.length);
   }
 
   function quedaDo(modelo) {
-    if (G.ajuda) return modelo.quedaFacilMs || FASE.quedaFacilMs || FASE.quedaMs;
-    return modelo.quedaMs || FASE.quedaMs;
+    if (G.ajuda) return modelo.quedaFacilMs || FASE.quedaFacilMs || FASE.quedaMs || 15000;
+    return modelo.quedaMs || FASE.quedaMs || 15000;
   }
 
   /* ---------- Relógio e Jogo ---------- */
@@ -349,8 +319,8 @@
 
   function hud() {
     $('hud-fase').textContent = 'Fase ' + (FASE_IDX + 1) + ' · ' + (TEMA.titulo || TEMA.id);
-    $('contador').textContent = G.isBoss ? (G.destruidas > 0 ? 1 : 0) : G.spawned;
-    $('total').textContent = G.isBoss ? 1 : FASE.naves;
+    $('contador').textContent = G.destruidas;
+    $('total').textContent = FASE.naves;
     $('vidas').textContent = 'Vidas: ' + '♥'.repeat(Math.max(0, G.vidas)) + '♡'.repeat(Math.max(0, FASE.vidas - G.vidas));
   }
 
@@ -457,12 +427,6 @@
     G.desloc += performance.now() - G.pausaEm;
     G.pausaEm = null;
     G.estado = 'jogo';
-    G.naves.forEach(n => {
-      if (n.modelo) {
-        const novaConta = gerarConta(n.modelo);
-        if (novaConta) n.c = novaConta; 
-      }
-    });
     fecharOverlay();
     entrarTelaCheia();
     $('resp').focus();
@@ -492,24 +456,19 @@
     FASE = JSON.parse(JSON.stringify(TEMA.fases[FASE_IDX]));
     
     const isUltimaFase = (FASE_IDX === TEMA.fases.length - 1);
-    let fatorProgressao = FASE_IDX * 0.3; 
 
+    // Regra 4: Fases normais exigem destruir 3 naves. A última exige 1. Todas iniciam com 3 vidas.
     if (isUltimaFase) {
       FASE.naves = 1; 
       FASE.vidas = 3;
-      FASE.quedaMs = Math.floor(FASE.quedaMs * 3.5); 
     } else {
-      FASE.naves = Math.max(2, Math.floor(FASE.naves / (1 + fatorProgressao)));
-      FASE.quedaMs = Math.floor(FASE.quedaMs * (1 + fatorProgressao)); 
-      
-      if (FASE.vidas >= FASE.naves) {
-        FASE.vidas = Math.max(1, FASE.naves - 1);
-      }
+      FASE.naves = 3;
+      FASE.vidas = 3;
     }
 
     G = novoJogo($('nome').value.trim(), $('turma').value);
     G.isBoss = isUltimaFase;
-    G.escalaNaves = isUltimaFase ? 3 : (1 + (FASE_IDX * 0.15)); 
+    G.escalaNaves = isUltimaFase ? 3 : 1.2; 
     confetes = []; 
   }
 
@@ -528,7 +487,7 @@
   }
 
   function comecarFase() {
-    G.proxSpawn = tempo() + 1500;
+    G.proxSpawn = tempo() + 1000;
     G.estado = 'jogo';
     hud();
     msg(G.isBoss ? 'A NAVE-MÃE ESTÁ DESCENDO! DESTRUA-A!' : 'Destrua as naves antes que cheguem à cabine!', G.isBoss ? '#f87171' : '#93c5fd');
@@ -544,16 +503,16 @@
   }
 
   function atualizar(now) {
-    if (G.spawned < FASE.naves && now >= G.proxSpawn) {
+    // Regra 1: Não gera outra nave enquanto a nave atual estiver na tela
+    if (G.naves.length === 0 && G.spawned < FASE.naves && now >= G.proxSpawn) {
       const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
       const c = gerarConta(modelo);
       if (c) {
         G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360), modelo: modelo });
         G.spawned++;
-        G.proxSpawn += FASE.intervaloMs;
         hud();
       } else {
-        G.proxSpawn = now + 800;   
+        G.proxSpawn = now + 500;   
       }
     }
 
@@ -566,18 +525,21 @@
         G.tremor = 400;
         som(160, 0.5, 'sawtooth');
         
+        // Regra 3: Se a Nave-Mãe invadir, perde vida, ela volta e gera uma nova conta
         if (G.isBoss) {
-          msg('A NAVE-MÃE ATINGIU A CABINE! Outra nave-mãe está descendo!', '#f87171');
+          msg('A NAVE-MÃE ATINGIU A CABINE! Ela está voltando com um novo código!', '#f87171');
           if (G.vidas > 0) {
-            G.spawned--; 
-            G.proxSpawn = now + 1000;
+            G.spawned--; // Permite spawnar novamente a mesma nave-mãe
+            G.proxSpawn = now + 1200;
           }
         } else {
           msg('Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
+          G.proxSpawn = now + 1200;
         }
         hud();
       }
     });
+    
     G.naves = G.naves.filter(n => !n.fim);
 
     if (G.vidas <= 0) return fimDeJogo();
@@ -598,7 +560,8 @@
       G.erros++;
       G.ajuda = true; 
       G.tremor = 200;
-      msg('Ainda não é essa resposta.', '#f87171');
+      // Regra 4: Se errar a conta NÃO perde vida, apenas mostra aviso
+      msg('Resposta incorreta! Tente novamente antes que a nave chegue!', '#f87171');
       return;
     }
 
@@ -607,7 +570,10 @@
     G.naves = G.naves.filter(x => x !== n);
     G.destruidas++;
     G.ajuda = false;
-    G.proxSpawn = agora; 
+    
+    // Regra 1: Ao destruir a nave, prepara o spawn da próxima nave
+    G.proxSpawn = agora + (FASE.intervaloMs || 1000); 
+    
     G.laser = { x1: pos.x, y1: pos.y, t: 0 };
     G.explosoes.push({ x: pos.x, y: pos.y, t: 0, isBoss: G.isBoss });
     som(1400, 0.12, 'square');
@@ -623,7 +589,7 @@
     const v = parseFloat(campo.value.trim().replace(',', '.'));
     campo.value = '';
     campo.focus();
-    if (isNaN(v)) { msg('Digite um número, como 1,6', '#f87171'); return; }
+    if (isNaN(v)) { msg('Digite um número válido!', '#f87171'); return; }
     responder(v);
   };
 
