@@ -667,29 +667,28 @@
     overlay(titulo, msgVitoria, [enviarBtn]);
   }
 
-  function fimDeJogo() {
+function fimDeJogo() {
     G.estado = 'fim';
     const rel = relatorio('derrota');
     const msgDerrota = G.isBoss 
-      ? G.nome + ', a NAVE-MÃE destruiu a cabine. A Terra foi perdida. Tente de novo!'
-      : G.nome + ', a cabine ficou sem vidas. Tente de novo!';
+      ? G.nome + ', a NAVE-MÃE destruiu a cabine! Você perdeu todas as vidas. Tente a missão novamente!'
+      : G.nome + ', a cabine ficou sem vidas. Tente a missão novamente!';
 
     const enviarBtn = { 
-      texto: 'Enviar relatório para continuar', 
+      texto: 'Enviar relatório e Tentar Novamente', 
       classe: 'btn-verde', 
       acao: () => {
-        $('ov-botoes').innerHTML = '<p style="color:#93c5fd;font-weight:bold;margin:10px 0;">Enviando...</p>';
+        $('ov-botoes').innerHTML = '<p style="color:#93c5fd;font-weight:bold;margin:10px 0;">Enviando relatório...</p>';
         enviarRelatorio(rel, () => {
           atualizarBotoesOverlay([
-            { texto: 'Reiniciar', classe: 'btn-laranja', acao: reiniciar },
-            { texto: 'Voltar ao menu', classe: 'btn-cinza', acao: voltarAoMenu }
+            { texto: 'Tentar Novamente esta fase', classe: 'btn-laranja', acao: reiniciar },
+            { texto: 'Voltar ao menu principal', classe: 'btn-cinza', acao: voltarAoMenu }
           ]);
         });
       }
     };
-    overlay('A Terra foi invadida', msgDerrota, [enviarBtn]);
+    overlay('A Terra foi invadida!', msgDerrota, [enviarBtn]);
   }
-
   function reiniciar() {
     fecharOverlay();
     prepararFaseDinamicamente();
