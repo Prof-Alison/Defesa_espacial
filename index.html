@@ -427,6 +427,15 @@
     G.desloc += performance.now() - G.pausaEm;
     G.pausaEm = null;
     G.estado = 'jogo';
+    
+    // GERA UMA NOVA CONTA AO VOLTAR DA PAUSA (impede de colar/print)
+    G.naves.forEach(n => {
+      if (n.modelo) {
+        const novaConta = gerarConta(n.modelo);
+        if (novaConta) n.c = novaConta; 
+      }
+    });
+
     fecharOverlay();
     entrarTelaCheia();
     $('resp').focus();
@@ -501,7 +510,6 @@
   }
 
   function atualizar(now) {
-    // CORREÇÃO: se não há nenhuma nave na tela e o jogador ainda não destruiu o total da fase, gera a próxima imediatamente
     if (G.naves.length === 0 && G.destruidas < FASE.naves) {
       const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
       const c = gerarConta(modelo);
