@@ -457,7 +457,6 @@
     
     const isUltimaFase = (FASE_IDX === TEMA.fases.length - 1);
 
-    // Regra 4: Fases normais exigem destruir 3 naves. A última exige 1. Todas iniciam com 3 vidas.
     if (isUltimaFase) {
       FASE.naves = 1; 
       FASE.vidas = 3;
@@ -487,7 +486,7 @@
   }
 
   function comecarFase() {
-    G.proxSpawn = tempo() + 1000;
+    G.proxSpawn = tempo();
     G.estado = 'jogo';
     hud();
     msg(G.isBoss ? 'A NAVE-MÃE ESTÁ DESCENDO! DESTRUA-A!' : 'Destrua as naves antes que cheguem à cabine!', G.isBoss ? '#f87171' : '#93c5fd');
@@ -503,7 +502,6 @@
   }
 
   function atualizar(now) {
-    // Regra 1: Não gera outra nave enquanto a nave atual estiver na tela
     if (G.naves.length === 0 && G.spawned < FASE.naves && now >= G.proxSpawn) {
       const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
       const c = gerarConta(modelo);
@@ -512,7 +510,7 @@
         G.spawned++;
         hud();
       } else {
-        G.proxSpawn = now + 500;   
+        G.proxSpawn = now + 100;   
       }
     }
 
@@ -525,16 +523,15 @@
         G.tremor = 400;
         som(160, 0.5, 'sawtooth');
         
-        // Regra 3: Se a Nave-Mãe invadir, perde vida, ela volta e gera uma nova conta
         if (G.isBoss) {
           msg('A NAVE-MÃE ATINGIU A CABINE! Ela está voltando com um novo código!', '#f87171');
           if (G.vidas > 0) {
-            G.spawned--; // Permite spawnar novamente a mesma nave-mãe
-            G.proxSpawn = now + 1200;
+            G.spawned--; 
+            G.proxSpawn = now + 500;
           }
         } else {
           msg('Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
-          G.proxSpawn = now + 1200;
+          G.proxSpawn = now + 500;
         }
         hud();
       }
@@ -560,7 +557,6 @@
       G.erros++;
       G.ajuda = true; 
       G.tremor = 200;
-      // Regra 4: Se errar a conta NÃO perde vida, apenas mostra aviso
       msg('Resposta incorreta! Tente novamente antes que a nave chegue!', '#f87171');
       return;
     }
@@ -571,8 +567,7 @@
     G.destruidas++;
     G.ajuda = false;
     
-    // Regra 1: Ao destruir a nave, prepara o spawn da próxima nave
-    G.proxSpawn = agora + (FASE.intervaloMs || 1000); 
+    G.proxSpawn = 0; 
     
     G.laser = { x1: pos.x, y1: pos.y, t: 0 };
     G.explosoes.push({ x: pos.x, y: pos.y, t: 0, isBoss: G.isBoss });
@@ -614,7 +609,7 @@
     
     const titulo = G.isBoss ? 'PARABÉNS, HERÓI!' : 'Terra salva nesta fase!';
     const msgVitoria = G.isBoss 
-      ? G.nome + ', VOCÊ SALVOU O PLANETA! A Nave-Mãe foi destruída e a humanidade está segura graças aos seus cálculos. Vidas restantes: ' + G.vidas
+      ? G.nome + ', VOCÊ SALVOU O PLANETA! A Nave-MÃE foi destruída e a humanidade está segura graças aos seus cálculos. Vidas restantes: ' + G.vidas
       : G.nome + ', a frota alienígena desta fase foi destruída. Vidas restantes: ' + G.vidas;
 
     if (G.isBoss) {
