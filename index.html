@@ -149,6 +149,7 @@
   let G = null, AC = null;
   let emTelaCheia = false;
   const ESTRELAS = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.3 }));
+  let confetes = []; // <-- Array para guardar os confetes
   const ctx = $('cv').getContext('2d');
 
   /* ---------- Utilidades ---------- */
@@ -378,6 +379,29 @@
 
   function fecharOverlay() { $('overlay').classList.remove('ativo'); }
 
+  /* ---------- Confetes ---------- */
+  function dispararConfetes() {
+    confetes = [];
+    const gerarLote = () => {
+      for (let i = 0; i < 80; i++) {
+        confetes.push({
+          x: W / 2 + (Math.random() * 200 - 100), 
+          y: H + 10,
+          vx: (Math.random() - 0.5) * 22,
+          vy: (Math.random() - 1) * 20 - 8,
+          s: Math.random() * 8 + 4,
+          cor: `hsl(${Math.random() * 360}, 100%, 60%)`,
+          ang: Math.random() * Math.PI * 2,
+          rot: (Math.random() - 0.5) * 0.5
+        });
+      }
+    };
+    // 3 Explosões seguidas
+    gerarLote();
+    setTimeout(gerarLote, 400);
+    setTimeout(gerarLote, 800);
+  }
+
   /* ---------- Tela cheia ---------- */
   function estaEmTelaCheia() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
   function entrarTelaCheia() {
@@ -430,22 +454,16 @@
     );
   }
 
-  /* SISTEMA ANTI-TRAPAÇA NA FUNÇÃO CONTINUAR */
   function continuar() {
     G.desloc += performance.now() - G.pausaEm;
     G.pausaEm = null;
     G.estado = 'jogo';
-
-    // Rola uma nova conta para as naves que estão caindo
     G.naves.forEach(n => {
       if (n.modelo) {
         const novaConta = gerarConta(n.modelo);
-        if (novaConta) {
-          n.c = novaConta; 
-        }
+        if (novaConta) n.c = novaConta; 
       }
     });
-
     fecharOverlay();
     entrarTelaCheia();
     $('resp').focus();
@@ -471,7 +489,6 @@
     contagem();
   };
 
-  /* PREPARAÇÃO DA FASE COM AJUSTES DE VIDAS E ESCALA */
   function prepararFaseDinamicamente() {
     FASE = JSON.parse(JSON.stringify(TEMA.fases[FASE_IDX]));
     
@@ -485,7 +502,6 @@
       FASE.naves = Math.max(2, Math.floor(FASE.naves / (1 + fatorProgressao)));
       FASE.quedaMs = Math.floor(FASE.quedaMs * (1 + fatorProgressao)); 
       
-      // REGRA: Vidas estritamente menores que a quantidade de naves
       if (FASE.vidas >= FASE.naves) {
         FASE.vidas = Math.max(1, FASE.naves - 1);
       }
@@ -493,9 +509,8 @@
 
     G = novoJogo($('nome').value.trim(), $('turma').value);
     G.isBoss = isUltimaFase;
-    
-    // REGRA: Escala aumenta de pouquinho (+15%) a cada fase
     G.escalaNaves = isUltimaFase ? 3 : (1 + (FASE_IDX * 0.15)); 
+    confetes = []; // Limpa confetes passados
   }
 
   function contagem() {
@@ -528,13 +543,11 @@
     return { x, y, p };
   }
 
-  /* SALVANDO O MODELO DENTRO DA NAVE EM ATUALIZAR */
   function atualizar(now) {
     if (G.spawned < FASE.naves && now >= G.proxSpawn) {
       const modelo = FASE.modelos[G.sequencia[G.spawned]];
       const c = gerarConta(modelo);
       if (c) {
-        // Agora 'modelo' vai gravado no objeto da nave (para o anti-trapaça usar)
         G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360), modelo: modelo });
         G.spawned++;
         G.proxSpawn += FASE.intervaloMs;
@@ -620,9 +633,20 @@
   function fimDaFase() {
     G.estado = 'fim';
     const rel = relatorio('fase concluida');
+    
+    // Título e Mensagem mudam se for a Nave-Mãe (última fase)
+    const titulo = G.isBoss ? 'PARABÉNS, HERÓI!' : 'Terra salva nesta fase!';
     const msgVitoria = G.isBoss 
-      ? G.nome + ', a NAVE-MÃE alienígena foi destruída. A Terra está a salvo! Vidas restantes: ' + G.vidas
+      ? G.nome + ', VOCÊ SALVOU O PLANETA! A Nave-Mãe foi destruída e a humanidade está segura graças aos seus cálculos. Vidas restantes: ' + G.vidas
       : G.nome + ', a frota alienígena desta fase foi destruída. Vidas restantes: ' + G.vidas;
+
+    // Efeitos da vitória final
+    if (G.isBoss) {
+      dispararConfetes();
+      som(440, 0.1, 'sine');
+      setTimeout(() => som(554, 0.1, 'sine'), 150);
+      setTimeout(() => som(659, 0.3, 'sine'), 300);
+    }
 
     const enviarBtn = { 
       texto: 'Enviar relatório para continuar', 
@@ -631,7 +655,7 @@
         $('ov-botoes').innerHTML = '<p style="color:#93c5fd;font-weight:bold;margin:10px 0;">Enviando...</p>';
         enviarRelatorio(rel, () => {
           const botoesApos = [];
-          if (FASE_IDX + 1 < TEMA.fases.length) {
+          if (!G.isBoss) {
             botoesApos.push({ texto: 'Próxima fase', classe: 'btn-laranja', acao: proximaFase });
           } else {
             botoesApos.push({ texto: 'Voltar ao menu', classe: 'btn-cinza', acao: voltarAoMenu });
@@ -640,7 +664,7 @@
         });
       }
     };
-    overlay('Terra salva nesta fase!', msgVitoria, [enviarBtn]);
+    overlay(titulo, msgVitoria, [enviarBtn]);
   }
 
   function fimDeJogo() {
@@ -689,6 +713,7 @@
   function voltarAoMenu() {
     fecharOverlay();
     G = null;
+    confetes = [];
     mostrar('tela-inicio');
     status('Escolha a turma e preencha o nome para jogar novamente.');
   }
@@ -901,6 +926,25 @@
     }
 
     desenharCabine(now, ang);
+    
+    // Desenha confetes se existirem (fica super bonito no fundo da caixa da vitória)
+    if (confetes.length > 0) {
+      confetes.forEach(c => {
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.35; // Gravidade
+        c.ang += c.rot;
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.ang);
+        ctx.fillStyle = c.cor;
+        ctx.fillRect(-c.s / 2, -c.s / 2, c.s, c.s);
+        ctx.restore();
+      });
+      // Remove os que caíram da tela
+      confetes = confetes.filter(c => c.y < H + 50);
+    }
+    
     ctx.restore();
   }
 
