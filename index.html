@@ -1,971 +1,640 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Defesa Espacial</title>
-<style>
-  * { box-sizing: border-box; }
-  body { margin: 0; background: #020617; color: #e2e8f0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-  #app { width: 100%; max-width: 860px; padding: 12px; }
-  .tela { display: none; text-align: center; }
-  .tela.ativa { display: block; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investigação de Resíduos — Jogo de Defesa Espacial</title>
+  <style>
+    :root {
+      --primary: #2e7d32;
+      --bg: #0b0e14;
+      --card: #161b22;
+      --text: #e6edf3;
+      --accent: #00e676;
+      --danger: #ff5252;
+    }
+    * { user-select: none; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    
+    /* Tela de Inicialização Obrigatória */
+    #startScreen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(135deg, #0d1b2a, #1b263b);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      text-align: center;
+      padding: 20px;
+    }
+    #startScreen h1 { font-size: 2.8rem; margin-bottom: 10px; color: var(--accent); }
+    #startScreen p { font-size: 1.1rem; max-width: 650px; margin-bottom: 25px; line-height: 1.6; }
+    .btn-start {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 16px 45px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+      transition: transform 0.2s;
+    }
+    .btn-start:hover { transform: scale(1.05); }
 
-  /* Tela inicial */
-  .cartao { position: relative; overflow: hidden; min-height: 600px; padding: 36px 18px 0; border-radius: 18px; border: 2px solid #1e293b; background: linear-gradient(180deg, #0b1024 0%, #1e1b4b 100%); }
-  .planeta-azul { position: absolute; top: 150px; right: 70px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #7dd3fc, #2563eb 60%, #1e3a8a); box-shadow: 0 0 30px rgba(56,189,248,.45); }
-  .planeta-azul::after { content: ''; position: absolute; left: -30px; top: 42px; width: 180px; height: 26px; border: 4px solid #d6b56b; border-radius: 50%; transform: rotate(-12deg); opacity: .8; }
-  .planeta-roxo { position: absolute; left: 36px; top: 300px; width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f0abfc, #a21caf 60%, #581c87); box-shadow: 0 0 22px rgba(217,70,239,.45); }
-  .planeta-roxo::after { content: ''; position: absolute; left: -42px; top: 36px; width: 50px; height: 3px; background: #a16207; transform: rotate(-22deg); }
-  .cartao h1 { position: relative; font-size: clamp(38px, 11vw, 66px); margin: 0 0 14px; color: #e0f2fe; text-shadow: 0 0 14px #38bdf8; letter-spacing: 3px; line-height: 1; }
-  .cartao h1 span { display: block; font-size: .36em; color: #fbbf24; letter-spacing: .5em; margin-top: 8px; text-shadow: 0 0 10px #f59e0b; }
-  .painel-piloto { position: relative; width: min(440px, 100%); margin: 0 auto 14px; background: rgba(15, 23, 42, .95); border: 2px solid #38bdf8; border-radius: 14px; padding: 18px 16px; box-shadow: 0 0 22px rgba(56,189,248,.25); }
-  .etiqueta { margin: 0 0 10px; font-size: 13px; font-weight: 800; letter-spacing: 3px; color: #38bdf8; text-transform: uppercase; }
-  .painel-piloto label { display: block; margin: 12px 0 8px; color: #cbd5e1; font-size: 15px; text-align: left; }
-  .campo { width: 100%; padding: 12px; font-size: 18px; border-radius: 10px; border: 1px solid #334155; background: #020617; color: #e2e8f0; text-align: center; }
-  select.campo { font-size: 16px; padding: 10px; }
-  select.campo:disabled { opacity: .5; }
-  .codigo { margin-top: 12px; padding: 12px; border-radius: 10px; border: 1px solid #0ea5e9; background: #020617; color: #4ade80; font-family: ui-monospace, Consolas, monospace; font-size: 22px; letter-spacing: 6px; word-break: break-word; min-height: 52px; }
-  #status { min-height: 24px; margin: 8px 0 4px; font-weight: 700; color: #93c5fd; font-size: 14px; line-height: 1.4; }
-  .btn { border: 0; border-radius: 12px; padding: 14px 26px; min-height: 46px; font-size: 16px; font-weight: 800; cursor: pointer; margin: 6px; }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-laranja { background: linear-gradient(90deg, #f97316, #fbbf24); color: #1c1917; box-shadow: 0 0 18px rgba(249,115,22,.35); }
-  .btn-verde { background: #22c55e; color: #052e16; }
-  .btn-cinza { background: #475569; color: #fff; }
+    /* HUD / Painel do Jogo */
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #161b22;
+      padding: 15px 25px;
+      border-radius: 10px;
+      border: 1px solid #30363d;
+      margin-bottom: 20px;
+      max-width: 850px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hud-item { font-size: 1.1rem; font-weight: bold; }
+    .hud-lives { color: var(--danger); }
+    .hud-phase { color: var(--accent); }
 
-  #btn-start { position: relative; z-index: 10; margin-bottom: 20px; }
+    /* Arena Espacial */
+    .space-arena {
+      position: relative;
+      width: 100%;
+      max-width: 850px;
+      height: 240px;
+      margin: 0 auto 20px auto;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      border: 2px solid #30363d;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    /* 3 Naves Invasoras para Fases Comuns */
+    .ship-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      width: 100%;
+      height: 60px;
+      position: absolute;
+      top: 10px;
+      transition: top 0.5s ease;
+    }
+    .enemy-ship {
+      width: 70px;
+      height: 35px;
+      background: linear-gradient(180deg, #7c4dff, #311b92);
+      border-radius: 40px 40px 15px 15px;
+      position: relative;
+      box-shadow: 0 0 12px #7c4dff;
+      transition: all 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .enemy-ship::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      width: 30px;
+      height: 15px;
+      background: rgba(0, 230, 118, 0.7);
+      border-radius: 15px 15px 0 0;
+    }
+    .enemy-ship.destroyed {
+      opacity: 0.1;
+      transform: scale(0.3);
+      box-shadow: none;
+    }
 
-  .nave-inicio { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); width: 240px; height: 58px; z-index: 1; }
-  .nave-inicio .cupula { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 70px; height: 34px; border-radius: 50% 50% 0 0; background: linear-gradient(#94a3b8, #475569); }
-  .nave-inicio .corpo { position: absolute; left: 0; right: 0; bottom: 8px; height: 40px; border-radius: 50%; background: linear-gradient(#e2e8f0, #64748b 55%, #1e293b); box-shadow: 0 0 18px rgba(148,163,184,.4); }
-  .nave-inicio .chama { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, #fff7ed, #fb923c 45%, transparent 70%); }
+    /* Nave Mãe (Fase Final) */
+    .mother-ship {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 260px;
+      height: 60px;
+      background: linear-gradient(180deg, #6a1b9a, #4a148c);
+      border-radius: 130px / 30px;
+      box-shadow: 0 0 25px #ab47bc;
+      border: 2px solid #e1bee7;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: top 0.5s ease;
+    }
+    .mother-ship-dome {
+      width: 90px;
+      height: 35px;
+      background: #ba68c8;
+      border-radius: 45px 45px 0 0;
+      position: absolute;
+      top: -20px;
+      opacity: 0.9;
+    }
+    .mother-ship-lights {
+      display: flex;
+      gap: 12px;
+      z-index: 2;
+    }
+    .light {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #00e676;
+      box-shadow: 0 0 8px #00e676;
+    }
+    .light:nth-child(even) { background: #ffeb3b; box-shadow: 0 0 8px #ffeb3b; }
 
-  /* Contagem e jogo */
-  #num { font-size: clamp(80px, 22vw, 150px); font-weight: 900; color: #fbbf24; text-shadow: 0 0 24px #f97316; min-height: 1.2em; }
-  .hud { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
-  #cena { position: relative; }
-  #cv { width: 100%; height: auto; display: block; border-radius: 12px; background: #000; }
-  #overlay { position: absolute; inset: 0; background: rgba(2, 6, 23, .92); border-radius: 12px; display: none; align-items: center; justify-content: center; padding: 16px; text-align: center; }
-  #overlay.ativo { display: flex; }
-  #overlay h2 { margin: 0 0 8px; color: #38bdf8; }
-  #overlay p { margin: 0 0 14px; color: #cbd5e1; line-height: 1.5; }
-  #msg { min-height: 46px; margin: 10px 0; font-weight: 700; color: #fde68a; display: flex; align-items: center; justify-content: center; }
-  #form { display: flex; gap: 8px; }
-  #form .campo { flex: 1; min-width: 0; }
-  #form .btn { margin: 0; }
-  #proteger { position: fixed; inset: 0; background: #000; display: none; z-index: 99; }
-  #proteger.ativo { display: block; }
-  @media (max-width: 480px) {
-    #form { flex-direction: column; }
-    #form .btn { width: 100%; }
-    .planeta-azul { right: 20px; width: 90px; height: 90px; }
-    .planeta-roxo { left: 10px; width: 56px; height: 56px; }
-  }
-</style>
+    /* Cabine de Comando (Jogador) */
+    .command-cabin {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 45px;
+      background: #263238;
+      border: 2px solid #455a64;
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: bold;
+      box-shadow: 0 -4px 15px rgba(0,230,118,0.2);
+    }
+
+    /* Formulário Principal */
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      background: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid #30363d;
+    }
+    .text-box {
+      background: #0d1117;
+      border-left: 5px solid var(--accent);
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .section-title {
+      color: var(--accent);
+      border-bottom: 2px solid #30363d;
+      padding-bottom: 8px;
+      margin-top: 25px;
+    }
+    .form-group { margin-bottom: 20px; }
+    label { font-weight: bold; display: block; margin-bottom: 8px; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: var(--text);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    textarea { height: 80px; resize: vertical; }
+    .radio-group label { font-weight: normal; display: block; margin-bottom: 6px; cursor: pointer; }
+    .btn-submit {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      width: 100%;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    .btn-submit:hover { background: #00c853; }
+    #statusMsg {
+      margin-top: 20px; padding: 15px; text-align: center;
+      border-radius: 6px; display: none; font-weight: bold;
+    }
+    .success { background: #1b5e20; color: #a5d6a7; }
+    .error { background: #b71c1c; color: #ffcdd2; }
+  </style>
 </head>
-<body>
-<div id="app">
+<body oncontextmenu="return false;">
 
-  <!-- Tela inicial -->
-  <section id="tela-inicio" class="tela ativa cartao">
-    <div class="planeta-azul"></div>
-    <div class="planeta-roxo"></div>
-    <h1>DEFESA<span>ESPACIAL</span></h1>
-    <div class="painel-piloto">
-      <p class="etiqueta">Identificação de piloto</p>
-      
-      <label for="turma">Sua turma</label>
-      <select id="turma" class="campo">
-        <option value="">Selecione sua turma...</option>
-        <option value="6º A">6º A</option><option value="6º B">6º B</option><option value="6º C">6º C</option>
-        <option value="7º A">7º A</option><option value="7º B">7º B</option><option value="7º C">7º C</option>
-        <option value="8º A">8º A</option><option value="8º B">8º B</option><option value="8º C">8º C</option>
-        <option value="9º A">9º A</option><option value="9º B">9º B</option><option value="9º C">9º C</option>
-        <option value="1º A">1º A</option><option value="1º B">1º B</option><option value="1º C">1º C</option>
-        <option value="2º A">2º A</option><option value="2º B">2º B</option><option value="2º C">2º C</option>
-        <option value="3º A">3º A</option><option value="3º B">3º B</option><option value="3º C">3º C</option>
-      </select>
+  <!-- Tela de Inicialização Obrigatória -->
+  <div id="startScreen">
+    <h1>🚀 Defesa Espacial: Resíduos</h1>
+    <p><strong>MODO SEGURO (TELA CHEIA):</strong> Responda às perguntas para destruir as naves inimigas. Se as naves invadirem e atingirem a Cabine de Comando, você perderá uma vida! Se alternar de aba (Alt+Tab) ou sair da tela cheia, a missão falhará e a jornada será REINICIADA.</p>
+    <button class="btn-start" onclick="iniciarJornada()">Iniciar Missão</button>
+  </div>
 
-      <label for="nome">Digite seu nome, comandante</label>
-      <input id="nome" class="campo" maxlength="30" autocomplete="off" placeholder="Seu nome">
-      <div id="visor" class="codigo">- - -</div>
+  <!-- HUD de Vida e Fases -->
+  <div class="hud">
+    <div class="hud-item hud-lives" id="hudLives">❤️ Vidas da Cabine: 3</div>
+    <div class="hud-item hud-phase" id="hudPhase">🛡️ Fase: 1 de 4</div>
+    <div class="hud-item" id="hudScore">🛸 Naves Abatidas: 0/3</div>
+  </div>
+
+  <!-- Arena Espacial com Naves -->
+  <div class="space-arena">
+    <!-- Container das 3 Naves Invasoras para Fases Comuns -->
+    <div class="ship-container" id="regularShips">
+      <div class="enemy-ship" id="ship1"></div>
+      <div class="enemy-ship" id="ship2"></div>
+      <div class="enemy-ship" id="ship3"></div>
     </div>
-    <p id="status">Carregando missão segura...</p>
-    <button id="btn-start" class="btn btn-laranja" disabled>Começar missão</button>
-    <div class="nave-inicio">
-      <div class="cupula"></div>
-      <div class="corpo"></div>
-      <div class="chama"></div>
-    </div>
-  </section>
 
-  <!-- Contagem -->
-  <section id="tela-contagem" class="tela">
-    <p style="font-size:clamp(18px,5vw,26px);font-weight:700;color:#e0f2fe">A frota alienígena se aproxima, comandante!</p>
-    <div id="num"></div>
-  </section>
-
-  <!-- Jogo -->
-  <section id="tela-jogo" class="tela">
-    <div class="hud">
-      <span id="hud-fase"></span>
-      <span>Invasores Destruídos: <b id="contador">0</b>/<b id="total">0</b></span>
-      <span id="vidas"></span>
-    </div>
-    <div id="cena">
-      <canvas id="cv" width="800" height="480"></canvas>
-      <div id="overlay">
-        <div>
-          <h2 id="ov-titulo"></h2>
-          <p id="ov-texto"></p>
-          <div id="ov-botoes"></div>
-        </div>
+    <!-- Nave Mãe para Fase Final -->
+    <div class="mother-ship" id="motherShip">
+      <div class="mother-ship-dome"></div>
+      <div class="mother-ship-lights">
+        <div class="light"></div><div class="light"></div><div class="light"></div>
+        <div class="light"></div><div class="light"></div><div class="light"></div>
       </div>
     </div>
-    <div id="msg"></div>
-    <form id="form">
-      <input id="resp" class="campo" inputmode="decimal" autocomplete="off" placeholder="Resultado (ex.: 1,6)">
-      <button type="submit" class="btn btn-laranja">Disparar</button>
-    </form>
-  </section>
-</div>
 
-<div id="proteger"></div>
+    <!-- Cabine de Comando -->
+    <div class="command-cabin">CABINE DE COMANDO</div>
+  </div>
+
+  <div class="container">
+    <form id="investigacaoForm">
+      <!-- Identificação -->
+      <div class="form-group">
+        <label for="equipe">Nome da Equipe / Integrantes:</label>
+        <input type="text" id="equipe" required placeholder="Ex: Esquadrão Verde - João, Maria e Pedro">
+      </div>
+      <div class="form-group">
+        <label for="turma">Série e Turma:</label>
+        <input type="text" id="turma" required placeholder="Ex: 1ª Série B">
+      </div>
+
+      <!-- ETAPA 1 -->
+      <h2 class="section-title">FASE 1: O Cenário Nacional de Resíduos (Destrua 3 Naves)</h2>
+      <div class="text-box">
+        <strong>Texto de Leitura 1:</strong><br>
+        Segundo a ABREMA, em 2023 o Brasil produziu 81 milhões de toneladas de resíduos sólidos urbanos (RSU)[cite: 5, 69]. Isso equivale a 221 mil toneladas diárias[cite: 69]. A geração média foi de 382 kg por habitante ao ano[cite: 5, 69], o que corresponde a 1,05 kg por dia por pessoa[cite: 5]. O Brasil possui cerca de 203 milhões de habitantes[cite: 76, 77].
+      </div>
+
+      <div class="form-group">
+        <label for="p1_1">P1.1: Produção total de RSU no Brasil em 2023 (em milhões de toneladas)[cite: 5, 69]:</label>
+        <input type="number" id="p1_1" required onchange="validarResposta('p1_1', 81)">
+      </div>
+      <div class="form-group">
+        <label for="p1_2">P1.2: Toneladas de lixo geradas por dia no Brasil[cite: 69]:</label>
+        <input type="number" id="p1_2" required onchange="validarResposta('p1_2', 221000)">
+      </div>
+      <div class="form-group">
+        <label for="p1_3">P1.3: Quilos de lixo gerados por habitante ao ano[cite: 5, 69]:</label>
+        <input type="number" id="p1_3" required onchange="validarResposta('p1_3', 382)">
+      </div>
+      <div class="form-group">
+        <label for="p1_4">P1.4 (Cálculo): Dividindo 382 kg por 365 dias, qual a geração diária por pessoa em kg[cite: 5]?</label>
+        <input type="number" step="0.01" id="p1_4" required placeholder="Ex: 1.05">
+      </div>
+      <div class="form-group">
+        <label for="p1_5">P1.5 (Cálculo): Lixo mensal de uma família de 4 pessoas (média 1,046 kg/dia/pessoa)[cite: 74, 77, 78]:</label>
+        <input type="number" step="0.01" id="p1_5" required placeholder="Ex: 125.52">
+      </div>
+
+      <!-- ETAPA 2 -->
+      <h2 class="section-title">FASE 2: Resíduos Orgânicos e Compostagem</h2>
+      <div class="text-box">
+        <strong>Texto de Leitura 2:</strong><br>
+        45,3% do lixo no Brasil é matéria orgânica[cite: 7, 8, 39, 80]. Menos de 2% é reciclado ou destinado à compostagem[cite: 4, 81]. O restante em aterros gera chorume e gás metano, que agravam o aquecimento global[cite: 4, 38, 71, 72].
+      </div>
+
+      <div class="form-group">
+        <label for="p2_1">P2.1: Porcentagem (%) de matéria orgânica no lixo do Brasil[cite: 7, 8, 39, 80]:</label>
+        <input type="number" step="0.1" id="p2_1" required placeholder="Ex: 45.3">
+      </div>
+      <div class="form-group">
+        <label for="p2_2">P2.2 (Cálculo): Toneladas de matéria orgânica geradas (45,3% de 81 milhões)[cite: 5, 8, 69, 80]:</label>
+        <input type="number" step="0.01" id="p2_2" required placeholder="Ex: 36.69">
+      </div>
+      <div class="form-group">
+        <label for="p2_3">P2.3: Percentual de resíduos orgânicos destinados à compostagem no Brasil[cite: 4, 81]:</label>
+        <select id="p2_3" required>
+          <option value="">Selecione...</option>
+          <option value="Menos de 2%">Menos de 2%</option>
+          <option value="Exatamente 15%">Exatamente 15%</option>
+          <option value="Mais de 30%">Mais de 30%</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="p2_4">P2.4: Impactos ambientais citados no texto[cite: 4, 38, 71, 72]:</label>
+        <select id="p2_4" required>
+          <option value="">Selecione...</option>
+          <option value="Geração de chorume e gás metano">Geração de chorume e gás metano</option>
+          <option value="Poluição por microplásticos e metais pesados">Poluição por microplásticos e metais pesados</option>
+          <option value="Contaminação apenas por poeira">Contaminação apenas por poeira</option>
+        </select>
+      </div>
+
+      <!-- ETAPA 3 -->
+      <h2 class="section-title">FASE 3: Mapeamento Físico da Escola</h2>
+      <div class="text-box">
+        Visitem as áreas da escola para coletar dados verificáveis[cite: 46, 47].
+      </div>
+
+      <div class="form-group radio-group">
+        <label>P3.1: Tipo de lixeiras disponíveis no pátio principal[cite: 46]:</label>
+        <label><input type="radio" name="p3_1" value="Apenas lixeiras comuns sem separação" required> Apenas lixeiras comuns sem separação</label>
+        <label><input type="radio" name="p3_1" value="Lixeiras de coleta seletiva separadas por cor"> Lixeiras de coleta seletiva separadas por cor</label>
+        <label><input type="radio" name="p3_1" value="Lixeiras exclusivas para resíduos orgânicos"> Lixeiras exclusivas para resíduos orgânicos</label>
+      </div>
+      <div class="form-group">
+        <label for="p3_2">P3.2: Quantidade de conjuntos de lixeiras seletivas no corredor da sua sala[cite: 47]:</label>
+        <input type="number" id="p3_2" required>
+      </div>
+      <div class="form-group radio-group">
+        <label>P3.3: Há recipiente exclusivo para restos de comida no refeitório[cite: 46, 47]?</label>
+        <label><input type="radio" name="p3_3" value="Sim, há lixeira específica para orgânicos" required> Sim, há lixeira específica para orgânicos</label>
+        <label><input type="radio" name="p3_3" value="Não, tudo é descartado junto no lixo comum"> Não, tudo é descartado junto no lixo comum</label>
+      </div>
+      <div class="form-group">
+        <label for="p3_4">P3.4: Ponto crítico de maior acúmulo de resíduos[cite: 46, 48]:</label>
+        <select id="p3_4" required>
+          <option value="">Selecione...</option>
+          <option value="Cantina/Refeitório">Cantina/Refeitório</option>
+          <option value="Quadra Esportiva">Quadra Esportiva</option>
+          <option value="Corredores das Salas">Corredores das Salas</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="p3_5">P3.5: Resíduo mais descartado na cantina/refeitório[cite: 46]:</label>
+        <select id="p3_5" required>
+          <option value="">Selecione...</option>
+          <option value="Garrafas PET / Copos plásticos">Garrafas PET / Copos plásticos</option>
+          <option value="Embalagens de papel/papelão">Embalagens de papel/papelão</option>
+          <option value="Latas de alumínio">Latas de alumínio</option>
+        </select>
+      </div>
+
+      <!-- ETAPA 4: NAVE MÃE -->
+      <h2 class="section-title">FASE FINAL: A Invasão da Nave Mãe</h2>
+      <div class="text-box">
+        <strong>ALERTA DE INVASÃO:</strong> A Nave Mãe está descendo em direção à Cabine de Comando! Responda corretamente aos cálculos para detê-la[cite: 106, 134, 160, 198].
+      </div>
+
+      <div class="form-group">
+        <label for="p4_1">P4.1 (Cálculo): Economia mensal no Cenário Inicial (20% de 240.000 garrafas = 48.000 x R$ 0,05)[cite: 106, 135, 136, 137, 199]:</label>
+        <input type="number" step="0.01" id="p4_1" required onchange="processarFaseFinal('p4_1', 2400)">
+      </div>
+      <div class="form-group">
+        <label for="p4_2">P4.2 (Cálculo): Economia mensal no Novo Cenário (28% = 67.200 garrafas x R$ 0,05)[cite: 134, 135, 136, 137, 168, 169]:</label>
+        <input type="number" step="0.01" id="p4_2" required onchange="processarFaseFinal('p4_2', 3360)">
+      </div>
+      <div class="form-group">
+        <label for="p4_3">P4.3 (Cálculo): Economia extra em 1 ano (Diferença de R$ 960,00 x 12)[cite: 135, 136, 137]:</label>
+        <input type="number" step="0.01" id="p4_3" required onchange="processarFaseFinal('p4_3', 11520)">
+      </div>
+      <div class="form-group">
+        <label for="p4_4">P4.4: A infraestrutura de reciclagem da escola está adequada ou insuficiente[cite: 47]? Justifique.</label>
+        <textarea id="p4_4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="p4_5">P4.5: Destino prioritário dos recursos economizados na escola[cite: 105, 138, 171]:</label>
+        <select id="p4_5" required>
+          <option value="">Selecione...</option>
+          <option value="Compra de materiais pedagógicos e esportivos">Compra de materiais pedagógicos e esportivos</option>
+          <option value="Manutenção e reformas de espaços">Manutenção e reformas de espaços</option>
+          <option value="Implantação de horta escolar e compostagem">Implantação de horta escolar e compostagem</option>
+          <option value="Equipamentos de tecnologia/laboratório">Equipamentos de tecnologia/laboratório</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="p4_6">P4.6: Frase com ação prática imediata para a turma[cite: 47]:</label>
+        <textarea id="p4_6" required></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btnSubmit">💥 Disparar e Destruir Nave Mãe</button>
+    </form>
+
+    <div id="statusMsg"></div>
+  </div>
 
 <script>
-(function () {
-  const $ = id => document.getElementById(id);
-  const W = 800, H = 480;
-  const PIVO = { x: W / 2, y: H - 88 };   
-  const URL_RELATORIO = 'https://script.google.com/macros/s/AKfycbzDfeKSeeRzLCkGeSmj9o345a5IP-v01Z--BE1UL5FUOAFD8ssW7cIlFoE7-QT-Um1I/exec';
-  const CATALOGO = 'temas/catalogo.json';
-  const SIMBOLO = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+  const APPS_SCRIPT_URL = "SEU_URL_DO_APPS_SCRIPT_AQUI";
 
-  const TEMAS = {};        
-  let TEMA = null;         
-  let FASE_IDX = 0;        
-  let FASE = null;         
-  let G = null, AC = null;
-  let emTelaCheia = false;
-  const ESTRELAS = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.3 }));
-  let confetes = [];
-  const ctx = $('cv').getContext('2d');
+  let jogoIniciado = false;
+  let vidas = 3;
+  let navesAbatidas = 0;
+  let faseAtual = 1;
+  let alturaNaves = 10;
+  let alturaNaveMae = 10;
 
-  /* ---------- Utilidades ---------- */
-  const ri = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
-  const pot = c => Math.pow(10, c);
+  function iniciarJornada() {
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) { elem.requestFullscreen(); }
+    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
 
-  function embaralhar(arr) {
-    const r = arr.slice();
-    for (let i = r.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [r[i], r[j]] = [r[j], r[i]];
+    document.getElementById('startScreen').style.display = 'none';
+    jogoIniciado = true;
+    atualizarHUD();
+  }
+
+  function reiniciarPorInfracao() {
+    if (!jogoIniciado) return;
+    alert("🚨 INFRAÇÃO DETECTADA!\nVocê alternou de janela ou saiu da Tela Cheia.\nA Cabine foi destruída e a atividade foi REINICIADA.");
+    resetTotal();
+  }
+
+  function resetTotal() {
+    document.getElementById('investigacaoForm').reset();
+    document.getElementById('startScreen').style.display = 'flex';
+    jogoIniciado = false;
+    vidas = 3;
+    navesAbatidas = 0;
+    faseAtual = 1;
+    alturaNaves = 10;
+    alturaNaveMae = 10;
+    document.getElementById('regularShips').style.top = '10px';
+    document.getElementById('motherShip').style.top = '10px';
+    document.getElementById('regularShips').style.display = 'flex';
+    document.getElementById('motherShip').style.display = 'none';
+    resetNaves();
+  }
+
+  function atualizarHUD() {
+    document.getElementById('hudLives').innerText = `❤️ Vidas da Cabine: ${vidas}`;
+    document.getElementById('hudPhase').innerText = `🛡️ Fase: ${faseAtual} de 4`;
+    document.getElementById('hudScore').innerText = `🛸 Naves Abatidas: ${navesAbatidas}/3`;
+  }
+
+  function resetNaves() {
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById(`ship${i}`).classList.remove('destroyed');
     }
-    return r;
   }
 
-  function status(texto, cor) {
-    $('status').textContent = texto;
-    $('status').style.color = cor || '#93c5fd';
-  }
-
-  function msg(texto, cor) {
-    $('msg').textContent = texto;
-    $('msg').style.color = cor || '#fde68a';
-  }
-
-  /* ---------- Carregamento de temas via URL ---------- */
-  async function lerJSON(caminho) {
-    const res = await fetch(caminho, { cache: 'no-store' });
-    if (!res.ok) throw new Error('arquivo não encontrado: ' + caminho);
-    return res.json();
-  }
-
-  function validarFase(f) {
-    const erros = [];
-    if (!f || typeof f !== 'object') return ['fase inválida'];
-    if (!(f.naves > 0)) erros.push('"naves"');
-    if (!Array.isArray(f.modelos) || !f.modelos.length) erros.push('"modelos"');
-    return erros;
-  }
-
-  function validarTema(t) {
-    if (!t || !Array.isArray(t.fases) || !t.fases.length) return ['sem fases'];
-    const erros = [];
-    t.fases.forEach((f, i) => validarFase(f).forEach(e => erros.push('fase ' + (i + 1) + ': ' + e)));
-    return erros;
-  }
-
-  async function carregarTemas() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlTema = urlParams.get('tema');
-    const urlFase = urlParams.get('fase');
-
-    if (!urlTema || !urlFase) {
-      status('Acesso restrito: Use o link completo fornecido pelo professor (contendo o tema e a fase). Ex: ?tema=adicao&fase=1', '#f87171');
-      return;
-    }
-
-    try {
-      const t = await lerJSON('temas/' + urlTema + '.json');
-      const erros = validarTema(t);
-      if (erros.length) { 
-        status('Erro no tema especificado no link: ' + erros[0], '#f87171'); 
-        return; 
+  function validarResposta(inputId, valorCorreto) {
+    const input = document.getElementById(inputId);
+    if (parseFloat(input.value) === valorCorreto) {
+      if (navesAbatidas < 3) {
+        navesAbatidas++;
+        document.getElementById(`ship${navesAbatidas}`).classList.add('destroyed');
+        atualizarHUD();
       }
-      TEMAS[urlTema] = { ...t, id: urlTema };
-    } catch (e) {
-      status('Tema não encontrado no servidor.', '#f87171');
-      return;
+    } else {
+      // Se errar a resposta, a nave desce mais um nível em direção à cabine
+      avancarNavesInvasoras();
+    }
+  }
+
+  // Avanço das Naves Comuns (Fases 1, 2 e 3)
+  function avancarNavesInvasoras() {
+    alturaNaves += 40;
+    const container = document.getElementById('regularShips');
+    container.style.top = alturaNaves + 'px';
+
+    // Se atingir a Cabine de Comando (posição >= 140px), ocorre uma INVASÃO
+    if (alturaNaves >= 140) {
+      registrarInvasao("As naves invasoras atingiram a Cabine de Comando!");
+      alturaNaves = 10;
+      container.style.top = '10px';
+    }
+  }
+
+  // Avanço da Nave Mãe (Fase Final 4)
+  function processarFaseFinal(inputId, valorCorreto) {
+    if (faseAtual !== 4) {
+      faseAtual = 4;
+      document.getElementById('regularShips').style.display = 'none';
+      document.getElementById('motherShip').style.display = 'flex';
     }
 
-    TEMA = TEMAS[urlTema];
-    const numFase = parseInt(urlFase, 10);
-    if (isNaN(numFase) || numFase < 1 || numFase > TEMA.fases.length) {
-      status('Fase especificada no link é inválida para este tema.', '#f87171');
-      return;
+    const input = document.getElementById(inputId);
+    if (parseFloat(input.value) !== valorCorreto) {
+      // Resposta incorreta faz a Nave Mãe avançar mais rápido em direção à cabine
+      alturaNaveMae += 45;
+    } else {
+      // Resposta correta recua um pouco a Nave Mãe
+      alturaNaveMae = Math.max(10, alturaNaveMae - 15);
     }
-    
-    FASE_IDX = numFase - 1; 
-    status(`Missão de ${TEMA.titulo || urlTema} (Fase ${numFase}) carregada. Preencha seus dados para iniciar.`);
-    $('btn-start').disabled = false;
-  }
 
-  /* ---------- Números decimais e Operações ---------- */
-  function normalizar(d) {
-    let { n, c } = d;
-    while (c > 0 && n % 10 === 0) { n /= 10; c--; }
-    return { n, c };
-  }
+    const motherShipElem = document.getElementById('motherShip');
+    motherShipElem.style.top = alturaNaveMae + 'px';
 
-  function sortearDecimal(spec) {
-    const c = spec.casas || 0;
-    const k = pot(c);
-    return { n: ri(Math.round(spec.min * k), Math.round(spec.max * k)), c };
-  }
-
-  function formatar(d) {
-    return d.c === 0 ? String(d.n) : (d.n / pot(d.c)).toFixed(d.c).replace('.', ',');
-  }
-
-  function operar(op, A, B, q) {
-    if (op === '*') return normalizar({ n: A.n * B.n, c: A.c + B.c });
-    if (op === '+' || op === '-') {
-      const c = Math.max(A.c, B.c);
-      const a = A.n * pot(c - A.c), b = B.n * pot(c - B.c);
-      return normalizar({ n: op === '+' ? a + b : a - b, c });
+    // Se a Nave Mãe alcançar a Cabine de Comando (posição >= 130px), ocorre uma INVASÃO
+    if (alturaNaveMae >= 130) {
+      registrarInvasao("A NAVE MÃE INVADIU E ATINGIU A CABINE DE COMANDO!");
+      alturaNaveMae = 10;
+      motherShipElem.style.top = '10px';
     }
-    if (B.n === 0) return null;
-    const K = q.casasMax ?? 2;
-    const num = A.n * pot(B.c + K);
-    const den = B.n * pot(A.c);
-    if (num % den !== 0) return null;
-    return normalizar({ n: num / den, c: K });
   }
 
-  function gerarConta(modelo) {
-    const q = modelo.quociente || {};
-    const naoNegativo = FASE.resultadoNaoNegativo || FASE.garantirResultadoPositivo || modelo.resultadoNaoNegativo;
+  // Ocorre Perda de Vida APENAS se houver INVASÃO da Cabine
+  function registrarInvasao(mensagem) {
+    vidas--;
+    atualizarHUD();
+    alert(`💥 INVASÃO CONFIRMADA!\n${mensagem}\nVocê perdeu 1 vida da Cabine.`);
 
-    for (let t = 0; t < 300; t++) {
-      const A = sortearDecimal(modelo.a);
-      const B = sortearDecimal(modelo.b);
-      if (modelo.dividendoMenorQueDivisor && !(A.n * pot(B.c) < B.n * pot(A.c))) continue;
-
-      const R = operar(modelo.operacao, A, B, q);
-      if (!R) continue;
-      if (R.n < 0 && naoNegativo) continue;
-      if (q.exigirDecimal && R.c === 0) continue;
-
-      const texto = formatar(A) + ' ' + SIMBOLO[modelo.operacao] + ' ' + formatar(B);
-      const r = R.n / pot(R.c);
-      if (G.textosUsados.has(texto)) continue;
-      if (G.naves.some(n => Math.abs(n.c.r - r) < 1e-9)) continue;
-
-      G.textosUsados.add(texto);
-      return { t: texto, r };
+    if (vidas <= 0) {
+      alert("🚨 TODAS AS VIDAS FORAM PERDIDAS POR INVASÃO! A Cabine de Comando foi destruída.");
+      resetTotal();
     }
-    return null;
   }
 
-  function montarSequencia() {
-    const mods = FASE.modelos;
-    return embaralhar(Array.from({ length: 300 }, (_, i) => i % mods.length));
-  }
-
-  function quedaDo(modelo) {
-    const tempoBase = modelo.quedaMs || FASE.quedaMs || 12000;
-    
-    // AUMENTO DE TEMPO: Multiplicamos por 3.0 para todas as fases normais.
-    // Se for um tema difícil como "operacoes_decimais_2", multiplicamos por 4.5 para dar tempo extra!
-    const ehTemaDificil = TEMA && TEMA.id && (TEMA.id.includes('decimais_2') || TEMA.id.includes('dificil'));
-    const multiplicador = ehTemaDificil ? 4.5 : 3.0;
-
-    return Math.floor(tempoBase * multiplicador); 
-  }
-
-  /* ---------- Relógio e Jogo ---------- */
-  function tempo() {
-    if (!G) return performance.now();
-    return (G.pausaEm ?? performance.now()) - G.desloc;
-  }
-
-  function novoJogo(nome, turma) {
-    return {
-      nome, turma, vidas: 3, naves: [], spawned: 0, destruidas: 0, invadidas: 0, erros: 0,
-      sequencia: montarSequencia(), textosUsados: new Set(),
-      tremor: 0, estado: 'contagem', proxSpawn: 0, explosoes: [], laser: null,
-      ang: -Math.PI / 2, ajuda: false, desloc: 0, pausaEm: null,
-      isBoss: false, escalaNaves: 1
-    };
-  }
-
-  function som(freq, dur, tipo) {
-    try {
-      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
-      const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
-      o.type = tipo || 'sine';
-      o.frequency.value = freq;
-      g.gain.setValueAtTime(0.12, t);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g).connect(AC.destination);
-      o.start(t); o.stop(t + dur + 0.02);
-    } catch (e) {}
-  }
-
-  function hud() {
-    $('hud-fase').textContent = 'Fase ' + (FASE_IDX + 1) + ' · ' + (TEMA.titulo || TEMA.id);
-    $('contador').textContent = G.destruidas;
-    $('total').textContent = FASE.naves;
-    $('vidas').textContent = 'Vidas: ' + '♥'.repeat(Math.max(0, G.vidas)) + '♡'.repeat(Math.max(0, 3 - G.vidas));
-  }
-
-  function mostrar(id) {
-    ['tela-inicio', 'tela-contagem', 'tela-jogo'].forEach(t => $(t).classList.toggle('ativa', t === id));
-  }
-
-  function overlay(titulo, texto, botoes) {
-    $('ov-titulo').textContent = titulo;
-    $('ov-texto').textContent = texto;
-    atualizarBotoesOverlay(botoes);
-    $('overlay').classList.add('ativo');
-  }
-
-  function atualizarBotoesOverlay(botoes) {
-    const box = $('ov-botoes');
-    box.innerHTML = '';
-    botoes.forEach(b => {
-      const el = document.createElement('button');
-      el.className = 'btn ' + b.classe;
-      el.textContent = b.texto;
-      el.onclick = b.acao;
-      box.appendChild(el);
-    });
-  }
-
-  function fecharOverlay() { $('overlay').classList.remove('ativo'); }
-
-  /* ---------- Confetes ---------- */
-  function dispararConfetes() {
-    confetes = [];
-    const gerarLote = () => {
-      for (let i = 0; i < 80; i++) {
-        confetes.push({
-          x: W / 2 + (Math.random() * 200 - 100), 
-          y: H + 10,
-          vx: (Math.random() - 0.5) * 22,
-          vy: (Math.random() - 1) * 20 - 8,
-          s: Math.random() * 8 + 4,
-          cor: `hsl(${Math.random() * 360}, 100%, 60%)`,
-          ang: Math.random() * Math.PI * 2,
-          rot: (Math.random() - 0.5) * 0.5
-        });
-      }
-    };
-    gerarLote();
-    setTimeout(gerarLote, 400);
-    setTimeout(gerarLote, 800);
-  }
-
-  /* ---------- Tela cheia ---------- */
-  function estaEmTelaCheia() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
-  function entrarTelaCheia() {
-    const el = document.documentElement;
-    try {
-      const req = el.requestFullscreen || el.webkitRequestFullscreen;
-      if (req && !estaEmTelaCheia()) {
-        const p = req.call(el);
-        if (p && p.catch) p.catch(() => {});
-      }
-    } catch (e) {}
-  }
-
-  function aoMudarTelaCheia() {
-    if (estaEmTelaCheia()) { emTelaCheia = true; return; }
-    if (!emTelaCheia) return;
-    emTelaCheia = false;
-    if (G && G.estado === 'jogo') pausar();
-  }
-  document.addEventListener('fullscreenchange', aoMudarTelaCheia);
-  document.addEventListener('webkitfullscreenchange', aoMudarTelaCheia);
-
-  document.addEventListener('contextmenu', e => { if (estaEmTelaCheia()) e.preventDefault(); });
-  document.addEventListener('keydown', e => {
-    if (!estaEmTelaCheia()) return;
-    const k = e.key.toLowerCase();
-    const comModificador = e.ctrlKey || e.metaKey || e.altKey;
-    const bloquear = (comModificador && ['t', 'w', 'n', 'r', 'tab'].includes(k)) || k === 'f5' || k === 'f11' || k === 'f12';
-    if (bloquear) e.preventDefault();
+  // Trava de Tela Cheia e Mudança de Aba
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && jogoIniciado) reiniciarPorInfracao();
+  });
+  window.addEventListener('blur', () => {
+    if (jogoIniciado) reiniciarPorInfracao();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'F12' || (e.altKey && e.key === 'Tab')) {
+      e.preventDefault();
+      if (jogoIniciado) reiniciarPorInfracao();
+    }
   });
 
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pausarPorTrocaDeJanela(); });
-  window.addEventListener('blur', pausarPorTrocaDeJanela);
-
-  function pausarPorTrocaDeJanela() {
-    if (!emTelaCheia || !G || G.estado !== 'jogo') return;
-    pausar('Você saiu da janela do jogo. Se sair agora, todo o progresso desta fase será perdido. Deseja realmente sair?');
-  }
-
-  function pausar(texto) {
-    G.estado = 'pausa';
-    G.pausaEm = performance.now();
-    overlay(
-      'Missão pausada',
-      texto || 'Atenção: se você sair da tela cheia agora, todo o progresso desta fase será perdido. Deseja realmente sair?',
-      [
-        { texto: 'Sim, sair e recomeçar', classe: 'btn-cinza', acao: reiniciar },
-        { texto: 'Não, continuar a missão', classe: 'btn-laranja', acao: continuar }
-      ]
-    );
-  }
-
-  function continuar() {
-    G.desloc += performance.now() - G.pausaEm;
-    G.pausaEm = null;
-    G.estado = 'jogo';
-    G.naves.forEach(n => {
-      if (n.modelo) {
-        const novaConta = gerarConta(n.modelo);
-        if (novaConta) n.c = novaConta; 
-      }
-    });
-    fecharOverlay();
-    entrarTelaCheia();
-    $('resp').focus();
-  }
-
-  /* ---------- Início e contagem ---------- */
-  $('nome').addEventListener('input', e => {
-    const v = e.target.value.trim();
-    $('visor').textContent = v ? v.toUpperCase() : '- - -';
-  });
-  $('nome').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-start').click(); });
-
-  $('btn-start').onclick = () => {
-    const turma = $('turma').value;
-    if (!turma) { $('turma').focus(); return; }
-    
-    const nome = $('nome').value.trim();
-    if (!nome) { $('nome').focus(); return; }
-    
-    prepararFaseDinamicamente();
-    
-    entrarTelaCheia();
-    contagem();
-  };
-
-  function prepararFaseDinamicamente() {
-    FASE = JSON.parse(JSON.stringify(TEMA.fases[FASE_IDX]));
-    
-    const isUltimaFase = (FASE_IDX === TEMA.fases.length - 1);
-
-    // Vidas fixas em 3 para todas as fases
-    FASE.vidas = 3;
-
-    if (isUltimaFase) {
-      FASE.naves = 1; 
-    }
-
-    G = novoJogo($('nome').value.trim(), $('turma').value);
-    G.isBoss = isUltimaFase;
-    G.escalaNaves = isUltimaFase ? 3 : (1 + (FASE_IDX * 0.15)); 
-    confetes = []; 
-  }
-
-  function contagem() {
-    mostrar('tela-contagem');
-    const passos = ['3', '2', '1', 'VAI!'];
-    let i = 0;
-    function passo() {
-      if (i >= passos.length) { mostrar('tela-jogo'); comecarFase(); return; }
-      $('num').textContent = passos[i];
-      som(i < 3 ? 520 : 880, 0.25, i < 3 ? 'square' : 'triangle');
-      i++;
-      setTimeout(passo, 900);
-    }
-    passo();
-  }
-
-  function comecarFase() {
-    G.proxSpawn = tempo() + 1000;
-    G.estado = 'jogo';
-    hud();
-    msg(G.isBoss ? 'A NAVE-MÃE ESTÁ DESCENDO! DESTRUA-A!' : 'Destrua as naves antes que cheguem à cabine!', G.isBoss ? '#f87171' : '#93c5fd');
-    $('resp').focus();
-  }
-
-  /* ---------- Movimento ---------- */
-  function posNave(n, now) {
-    const p = Math.min(1, (now - n.ini) / n.queda);
-    const x = W / 2 + Math.sin(p * Math.PI * 4) * 220;
-    const y = 110 + p * (H - 260);
-    return { x, y, p };
-  }
-
-  function atualizar(now) {
-    // REGRA 1: NUNCA gera uma nova nave enquanto já houver 1 nave na tela
-    // REGRA 2: Gera naves sem parar (sem limite) até que G.destruidas atinja o objetivo da fase
-    if (G.naves.length === 0 && G.destruidas < FASE.naves && now >= G.proxSpawn) {
-      const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
-      const c = gerarConta(modelo);
-      if (c) {
-        G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360), modelo: modelo });
-        G.spawned++;
-        hud();
-      } else {
-        G.proxSpawn = now + 500;   
-      }
-    }
-
-    G.naves.forEach(n => {
-      if (!n.fim && now - n.ini >= n.queda) {
-        n.fim = true;
-        G.invadidas++;
-        G.vidas--;
-        G.ajuda = true;  
-        G.tremor = 400;
-        som(160, 0.5, 'sawtooth');
-        
-        if (G.isBoss) {
-          msg('A NAVE-MÃE ATINGIU A CABINE! Outra nave-mãe está descendo!', '#f87171');
-        } else {
-          msg('Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
-        }
-
-        // Se o aluno não atingiu 0 vidas, a próxima nave nasce em 1 segundo após o choque na cabine
-        if (G.vidas > 0) {
-          G.proxSpawn = now + 1000;
-        }
-        hud();
-      }
-    });
-    
-    // Remove a nave finalizada da tela
-    G.naves = G.naves.filter(n => !n.fim);
-
-    // 1. Se acabou o número de vidas, é DERROTA
-    if (G.vidas <= 0) return fimDeJogo();
-    
-    // 2. CONDIÇÃO DE VITÓRIA: Precisa acertar a quantidade total de naves exigida pela fase
-    if (G.destruidas >= FASE.naves) {
-      return fimDaFase();
-    }
-  }
-
-  /* ---------- Resposta ---------- */
-  function responder(v) {
-    const agora = tempo();
-    const alvos = G.naves
-      .filter(n => Math.abs(n.c.r - v) < 1e-6)
-      .sort((a, b) => a.ini - b.ini);   
-
-    if (!alvos.length) {
-      G.erros++;
-      G.ajuda = true; 
-      G.tremor = 200;
-      msg('Ainda não é essa resposta.', '#f87171');
-      return;
-    }
-
-    const n = alvos[0];
-    const pos = posNave(n, agora);
-    G.naves = G.naves.filter(x => x !== n);
-    G.destruidas++;
-    G.ajuda = false;
-    
-    // Após destruir a nave com sucesso pelo tiro, agenda o nascimento da próxima nave IMEDIATAMENTE (600ms)
-    G.proxSpawn = agora + 600; 
-
-    G.laser = { x1: pos.x, y1: pos.y, t: 0 };
-    G.explosoes.push({ x: pos.x, y: pos.y, t: 0, isBoss: G.isBoss });
-    som(1400, 0.12, 'square');
-    setTimeout(() => som(300, 0.3, 'sawtooth'), 120);
-    msg(G.isBoss ? 'NAVE-MÃE DESTRUÍDA!' : 'Nave alienígena destruída!', '#86efac');
-    hud();
-  }
-
-  $('form').onsubmit = e => {
+  // Envio Final do Formulário para a Planilha do Google
+  document.getElementById('investigacaoForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    if (!G || G.estado !== 'jogo') return;
-    const campo = $('resp');
-    const v = parseFloat(campo.value.trim().replace(',', '.'));
-    campo.value = '';
-    campo.focus();
-    if (isNaN(v)) { msg('Digite um número, como 1,6', '#f87171'); return; }
-    responder(v);
-  };
 
-  /* ---------- Fim da fase e fim de jogo ---------- */
-  function relatorio(resultado) {
-    return {
-      tema: TEMA.titulo || TEMA.id, 
-      fase: FASE_IDX + 1,
-      turma: G.turma,
-      nome: G.nome,
-      resultado,
-      naves_destruidas: G.destruidas,
-      naves_invadidas: G.invadidas,
-      erros: G.erros,
-      vidas_restantes: G.vidas
+    const btn = document.getElementById('btnSubmit');
+    const msg = document.getElementById('statusMsg');
+
+    btn.disabled = true;
+    btn.innerText = "💥 Disparando pulso final...";
+
+    const getRadio = name => {
+      const el = document.querySelector(`input[name="${name}"]:checked`);
+      return el ? el.value : "";
     };
-  }
 
-  function fimDaFase() {
-    G.estado = 'fim';
-    const rel = relatorio('fase concluida');
-    
-    const titulo = G.isBoss ? 'PARABÉNS, HERÓI!' : 'Terra salva nesta fase!';
-    const msgVitoria = G.isBoss 
-      ? G.nome + ', VOCÊ SALVOU O PLANETA! A Nave-Mãe foi destruída e a humanidade está segura graças aos seus cálculos. Vidas restantes: ' + G.vidas
-      : G.nome + ', a frota alienígena desta fase foi destruída. Vidas restantes: ' + G.vidas;
-
-    if (G.isBoss) {
-      dispararConfetes();
-      som(440, 0.1, 'sine');
-      setTimeout(() => som(554, 0.1, 'sine'), 150);
-      setTimeout(() => som(659, 0.3, 'sine'), 300);
-    }
-
-    const enviarBtn = { 
-      texto: 'Enviar relatório para continuar', 
-      classe: 'btn-verde', 
-      acao: () => {
-        $('ov-botoes').innerHTML = '<p style="color:#93c5fd;font-weight:bold;margin:10px 0;">Enviando...</p>';
-        enviarRelatorio(rel, () => {
-          const botoesApos = [];
-          if (!G.isBoss) {
-            botoesApos.push({ texto: 'Próxima fase', classe: 'btn-laranja', acao: proximaFase });
-          } else {
-            botoesApos.push({ texto: 'Voltar ao menu', classe: 'btn-cinza', acao: voltarAoMenu });
-          }
-          atualizarBotoesOverlay(botoesApos);
-        });
-      }
-    };
-    overlay(titulo, msgVitoria, [enviarBtn]);
-  }
-
-  function fimDeJogo() {
-    G.estado = 'fim';
-    const rel = relatorio('derrota');
-    const msgDerrota = G.isBoss 
-      ? G.nome + ', a NAVE-MÃE destruiu a cabine! Você perdeu todas as vidas. Tente a missão novamente!'
-      : G.nome + ', a cabine ficou sem vidas. Tente a missão novamente!';
-
-    const enviarBtn = { 
-      texto: 'Enviar relatório e Tentar Novamente', 
-      classe: 'btn-verde', 
-      acao: () => {
-        $('ov-botoes').innerHTML = '<p style="color:#93c5fd;font-weight:bold;margin:10px 0;">Enviando relatório...</p>';
-        enviarRelatorio(rel, () => {
-          atualizarBotoesOverlay([
-            { texto: 'Tentar Novamente esta fase', classe: 'btn-laranja', acao: reiniciar },
-            { texto: 'Voltar ao menu principal', classe: 'btn-cinza', acao: voltarAoMenu }
-          ]);
-        });
-      }
-    };
-    overlay('A Terra foi invadida!', msgDerrota, [enviarBtn]);
-  }
-
-  function reiniciar() {
-    fecharOverlay();
-    prepararFaseDinamicamente();
-    entrarTelaCheia();
-    contagem();
-  }
-
-  function proximaFase() {
-    fecharOverlay();
-    FASE_IDX++;
-    
-    const novaUrl = new URL(window.location);
-    novaUrl.searchParams.set('fase', FASE_IDX + 1);
-    window.history.pushState({}, '', novaUrl);
-
-    prepararFaseDinamicamente();
-    entrarTelaCheia();
-    contagem();
-  }
-
-  function voltarAoMenu() {
-    fecharOverlay();
-    G = null;
-    confetes = [];
-    mostrar('tela-inicio');
-    status('Escolha a turma e preencha o nome para jogar novamente.');
-  }
-
-  function enviarRelatorio(dados, cb) {
     const payload = {
-      tema: dados.tema,
-      fase: dados.fase,
-      turma: dados.turma,
-      nome: dados.nome,
-      resultado: dados.resultado,
-      naves_destruidas: dados.naves_destruidas,
-      naves_invadidas: dados.naves_invadidas,
-      erros: dados.erros,
-      vidas_restantes: dados.vidas_restantes
+      equipe: document.getElementById('equipe').value,
+      turma: document.getElementById('turma').value,
+      p1_1: document.getElementById('p1_1').value,
+      p1_2: document.getElementById('p1_2').value,
+      p1_3: document.getElementById('p1_3').value,
+      p1_4: document.getElementById('p1_4').value,
+      p1_5: document.getElementById('p1_5').value,
+      p2_1: document.getElementById('p2_1').value,
+      p2_2: document.getElementById('p2_2').value,
+      p2_3: document.getElementById('p2_3').value,
+      p2_4: document.getElementById('p2_4').value,
+      p3_1: getRadio('p3_1'),
+      p3_2: document.getElementById('p3_2').value,
+      p3_3: getRadio('p3_3'),
+      p3_4: document.getElementById('p3_4').value,
+      p3_5: document.getElementById('p3_5').value,
+      p4_1: document.getElementById('p4_1').value,
+      p4_2: document.getElementById('p4_2').value,
+      p4_3: document.getElementById('p4_3').value,
+      p4_4: document.getElementById('p4_4').value,
+      p4_5: document.getElementById('p4_5').value,
+      p4_6: document.getElementById('p4_6').value
     };
 
-    if (!URL_RELATORIO) {
-      msg('Relatório pronto. Falta configurar a URL de envio no código.', '#fde68a');
-      console.log('Relatório:', payload);
-      if(cb) cb();
-      return;
-    }
-    msg('Enviando relatório...', '#93c5fd');
-    
-    fetch(URL_RELATORIO, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    }).then(() => {
-        msg('Relatório enviado ao professor!', '#86efac');
-        if(cb) cb();
-    }).catch(() => {
-        msg('Não foi possível enviar agora. Verifique a conexão.', '#f87171');
-        if(cb) cb();
+    })
+    .then(() => {
+      msg.className = "success";
+      msg.innerText = "🏆 VITÓRIA! A Nave Mãe foi destruída e o relatório enviado!";
+      msg.style.display = "block";
+      btn.disabled = false;
+      btn.innerText = "🚀 Missão Concluída";
+      jogoIniciado = false;
+      if (document.exitFullscreen) document.exitFullscreen();
+    })
+    .catch(() => {
+      msg.className = "error";
+      msg.innerText = "❌ Erro ao enviar os dados. Tente novamente.";
+      msg.style.display = "block";
+      btn.disabled = false;
     });
-  }
-
-  /* ---------- Cabine (base interna da nave) ---------- */
-  function desenharCabine(now, ang) {
-    const painel = ctx.createLinearGradient(0, H - 90, 0, H);
-    painel.addColorStop(0, '#1e293b');
-    painel.addColorStop(1, '#020617');
-    ctx.fillStyle = painel;
-    ctx.fillRect(0, H - 90, W, 90);
-    ctx.fillStyle = '#334155';
-    ctx.fillRect(0, H - 92, W, 4);
-
-    for (let i = 0; i < 5; i++) {
-      const acesa = (Math.floor(now / 400) + i) % 3 === 0;
-      ctx.fillStyle = acesa ? '#22c55e' : '#0ea5e9';
-      ctx.beginPath(); ctx.arc(60 + i * 26, H - 40, 5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(W - 60 - i * 26, H - 40, 5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 11px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('CABINE DE COMANDO · DEFESA DA TERRA', W / 2, H - 14);
-
-    ctx.beginPath();
-    ctx.moveTo(30, H - 92);
-    ctx.lineTo(120, H - 168);
-    ctx.lineTo(W - 120, H - 168);
-    ctx.lineTo(W - 30, H - 92);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.10)';
-    ctx.fill();
-    ctx.strokeStyle = '#475569';
-    ctx.lineWidth = 10;
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(186, 230, 253, 0.35)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(180, H - 100); ctx.lineTo(240, H - 160);
-    ctx.moveTo(230, H - 100); ctx.lineTo(290, H - 160);
-    ctx.moveTo(W - 230, H - 100); ctx.lineTo(W - 170, H - 160);
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(PIVO.x, PIVO.y);
-    ctx.fillStyle = '#64748b';
-    ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fill();
-    ctx.rotate(ang + Math.PI / 2);
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillRect(-8, -72, 16, 72);
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillRect(-11, -76, 22, 8);
-    ctx.restore();
-  }
-
-  /* ---------- Desenho ---------- */
-  function desenhar(now) {
-    ctx.clearRect(0, 0, W, H);
-    const tremorAtivo = G && G.tremor > 0;
-    const tx = tremorAtivo ? (Math.random() - 0.5) * 10 : 0;
-    const ty = tremorAtivo ? (Math.random() - 0.5) * 10 : 0;
-    if (G) G.tremor = Math.max(0, G.tremor - 16);
-
-    let ang = G ? G.ang : -Math.PI / 2;
-    if (G && G.estado === 'jogo' && G.naves.length) {
-      const mais = G.naves.reduce((a, b) => (posNave(b, now).p > posNave(a, now).p ? b : a));
-      const pos = posNave(mais, now);
-      let alvo = Math.atan2(pos.y - PIVO.y, pos.x - PIVO.x);
-      alvo = Math.max(-Math.PI + 0.15, Math.min(-0.15, alvo));
-      G.ang += (alvo - G.ang) * 0.12;
-      ang = G.ang;
-    } else if (G) {
-      G.ang += (-Math.PI / 2 - G.ang) * 0.08;
-      ang = G.ang;
-    }
-
-    ctx.save();
-    ctx.translate(tx, ty);
-
-    ctx.fillStyle = '#e2e8f0';
-    ESTRELAS.forEach(s => { ctx.globalAlpha = s.s / 2; ctx.fillRect(s.x, s.y, s.s, s.s); });
-    ctx.globalAlpha = 1;
-
-    const pulso = 0.6 + Math.sin(now / 300) * 0.4;
-    const halo = ctx.createRadialGradient(W / 2, 50, 20, W / 2, 50, 160);
-    halo.addColorStop(0, 'rgba(168,85,247,' + (0.4 * pulso) + ')');
-    halo.addColorStop(1, 'rgba(168,85,247,0)');
-    ctx.fillStyle = halo;
-    ctx.beginPath(); ctx.ellipse(W / 2, 50, 160, 70, 0, 0, Math.PI * 2); ctx.fill();
-
-    const casco = ctx.createLinearGradient(0, 22, 0, 80);
-    casco.addColorStop(0, '#a78bfa');
-    casco.addColorStop(0.5, '#5b21b6');
-    casco.addColorStop(1, '#2e1065');
-    ctx.fillStyle = casco;
-    ctx.beginPath(); ctx.ellipse(W / 2, 50, 120, 30, 0, 0, Math.PI * 2); ctx.fill();
-
-    ctx.strokeStyle = 'rgba(216, 180, 254, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(W / 2, 50, 104, 22, 0, 0, Math.PI * 2); ctx.stroke();
-
-    const cupula = ctx.createRadialGradient(W / 2 - 10, 28, 4, W / 2, 40, 40);
-    cupula.addColorStop(0, '#f0abfc');
-    cupula.addColorStop(1, '#7e22ce');
-    ctx.fillStyle = cupula;
-    ctx.beginPath(); ctx.ellipse(W / 2, 40, 40, 18, 0, Math.PI, 0); ctx.fill();
-
-    for (let i = -4; i <= 4; i++) {
-      const acesa = (Math.floor(now / 200) + i) % 2 === 0;
-      ctx.fillStyle = acesa ? '#facc15' : '#22d3ee';
-      ctx.beginPath(); ctx.arc(W / 2 + i * 22, 52, 3.5, 0, Math.PI * 2); ctx.fill();
-    }
-
-    if (G) {
-      G.naves.forEach(n => {
-        const pos = posNave(n, now);
-        
-        ctx.save();
-        ctx.translate(pos.x, pos.y);
-        
-        const escala = G.escalaNaves || 1;
-        ctx.scale(escala, escala);
-        
-        const corBase = G.isBoss ? '#b91c1c' : `hsl(${n.corH}, 80%, 35%)`;
-        const corTopo = G.isBoss ? '#f87171' : `hsl(${n.corH}, 80%, 65%)`;
-
-        ctx.fillStyle = corBase;
-        ctx.beginPath(); ctx.ellipse(0, 0, 26, 11, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = corTopo;
-        ctx.beginPath(); ctx.ellipse(0, -4, 12, 7, 0, Math.PI, 0); ctx.fill();
-        
-        ctx.font = 'bold 18px system-ui, sans-serif';
-        const w = ctx.measureText(n.c.t).width + 24;
-        ctx.fillStyle = 'rgba(15,23,42,.92)';
-        ctx.beginPath(); ctx.roundRect(-w / 2, -46, w, 28, 8); ctx.fill();
-        ctx.fillStyle = '#f8fafc';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(n.c.t, 0, -32);
-        
-        ctx.restore();
-      });
-
-      if (G.laser) {
-        const tipoX = PIVO.x + Math.cos(ang) * 76;
-        const tipoY = PIVO.y + Math.sin(ang) * 76;
-        const fase = G.laser.t / 14;
-        ctx.globalAlpha = 1 - fase;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = 'rgba(248, 113, 113, 0.35)';
-        ctx.lineWidth = 12;
-        ctx.beginPath(); ctx.moveTo(tipoX, tipoY); ctx.lineTo(G.laser.x1, G.laser.y1); ctx.stroke();
-        ctx.strokeStyle = '#fecaca';
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(tipoX, tipoY); ctx.lineTo(G.laser.x1, G.laser.y1); ctx.stroke();
-        ctx.globalAlpha = 1;
-        G.laser.t++;
-        if (G.laser.t >= 14) G.laser = null;
-      }
-
-      G.explosoes = G.explosoes.filter(e => e.t < 25);
-      G.explosoes.forEach(e => {
-        e.t++;
-        ctx.globalAlpha = 1 - e.t / 25;
-        ctx.fillStyle = '#fb923c';
-        const raio = e.t * 2.5 * (e.isBoss ? 3 : 1);
-        ctx.beginPath(); ctx.arc(e.x, e.y, raio, 0, Math.PI * 2); ctx.fill();
-      });
-      ctx.globalAlpha = 1;
-    }
-
-    desenharCabine(now, ang);
-    
-    if (confetes.length > 0) {
-      confetes.forEach(c => {
-        c.x += c.vx;
-        c.y += c.vy;
-        c.vy += 0.35;
-        c.ang += c.rot;
-        ctx.save();
-        ctx.translate(c.x, c.y);
-        ctx.rotate(c.ang);
-        ctx.fillStyle = c.cor;
-        ctx.fillRect(-c.s / 2, -c.s / 2, c.s, c.s);
-        ctx.restore();
-      });
-      confetes = confetes.filter(c => c.y < H + 50);
-    }
-    
-    ctx.restore();
-  }
-
-  function loop() {
-    const now = tempo();
-    if (G && G.estado === 'jogo') atualizar(now);
-    desenhar(now);
-    requestAnimationFrame(loop);
-  }
-
-  /* ---------- Proteção básica contra print screen ---------- */
-  document.addEventListener('keyup', e => {
-    if (e.key === 'PrintScreen') {
-      $('proteger').classList.add('ativo');
-      try { navigator.clipboard.writeText(''); } catch (err) {}
-      setTimeout(() => $('proteger').classList.remove('ativo'), 1500);
-    }
   });
-
-  /* ---------- Inicialização ---------- */
-  carregarTemas().catch(e => {
-    status('Não foi possível iniciar. Verifique o link e a conexão.', '#f87171');
-  });
-  requestAnimationFrame(loop);
-})();
 </script>
 </body>
 </html>
