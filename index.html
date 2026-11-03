@@ -32,7 +32,11 @@
   .btn-laranja { background: linear-gradient(90deg, #f97316, #fbbf24); color: #1c1917; box-shadow: 0 0 18px rgba(249,115,22,.35); }
   .btn-verde { background: #22c55e; color: #052e16; }
   .btn-cinza { background: #475569; color: #fff; }
-  .nave-inicio { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); width: 240px; height: 58px; }
+
+  /* Correção do botão sobreposto */
+  #btn-start { position: relative; z-index: 10; margin-bottom: 20px; }
+
+  .nave-inicio { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); width: 240px; height: 58px; z-index: 1; }
   .nave-inicio .cupula { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 70px; height: 34px; border-radius: 50% 50% 0 0; background: linear-gradient(#94a3b8, #475569); }
   .nave-inicio .corpo { position: absolute; left: 0; right: 0; bottom: 8px; height: 40px; border-radius: 50%; background: linear-gradient(#e2e8f0, #64748b 55%, #1e293b); box-shadow: 0 0 18px rgba(148,163,184,.4); }
   .nave-inicio .chama { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, #fff7ed, #fb923c 45%, transparent 70%); }
