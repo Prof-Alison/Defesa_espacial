@@ -137,15 +137,15 @@
 (function () {
   const $ = id => document.getElementById(id);
   const W = 800, H = 480;
-  const PIVO = { x: W / 2, y: H - 88 };   // posição do canhão na cabine
+  const PIVO = { x: W / 2, y: H - 88 };   
   const URL_RELATORIO = 'https://script.google.com/macros/s/AKfycbzDfeKSeeRzLCkGeSmj9o345a5IP-v01Z--BE1UL5FUOAFD8ssW7cIlFoE7-QT-Um1I/exec';
   const CATALOGO = 'temas/catalogo.json';
   const SIMBOLO = { '+': '+', '-': '−', '*': '×', '/': '÷' };
 
   const TEMAS = {};        
-  let TEMA = null;         // tema em jogo (carregado via URL)
-  let FASE_IDX = 0;        // índice da fase em jogo (carregado via URL)
-  let FASE = null;         // configuração da fase em jogo
+  let TEMA = null;         
+  let FASE_IDX = 0;        
+  let FASE = null;         
   let G = null, AC = null;
   let emTelaCheia = false;
   const ESTRELAS = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.3 }));
@@ -237,7 +237,7 @@
       return;
     }
     
-    FASE_IDX = numFase - 1; // Array base 0
+    FASE_IDX = numFase - 1; 
     status(`Missão de ${TEMA.titulo || urlTema} (Fase ${numFase}) carregada. Preencha seus dados para iniciar.`);
     $('btn-start').disabled = false;
   }
@@ -430,10 +430,22 @@
     );
   }
 
+  /* SISTEMA ANTI-TRAPAÇA NA FUNÇÃO CONTINUAR */
   function continuar() {
     G.desloc += performance.now() - G.pausaEm;
     G.pausaEm = null;
     G.estado = 'jogo';
+
+    // Rola uma nova conta para as naves que estão caindo
+    G.naves.forEach(n => {
+      if (n.modelo) {
+        const novaConta = gerarConta(n.modelo);
+        if (novaConta) {
+          n.c = novaConta; 
+        }
+      }
+    });
+
     fecharOverlay();
     entrarTelaCheia();
     $('resp').focus();
@@ -459,24 +471,31 @@
     contagem();
   };
 
+  /* PREPARAÇÃO DA FASE COM AJUSTES DE VIDAS E ESCALA */
   function prepararFaseDinamicamente() {
-    // Clonamos a fase original para poder alterar dinamicamente
     FASE = JSON.parse(JSON.stringify(TEMA.fases[FASE_IDX]));
     
     const isUltimaFase = (FASE_IDX === TEMA.fases.length - 1);
-    let fatorProgressao = FASE_IDX * 0.3; // Dificuldade escala
+    let fatorProgressao = FASE_IDX * 0.3; 
 
     if (isUltimaFase) {
       FASE.naves = 1; 
-      FASE.quedaMs = Math.floor(FASE.quedaMs * 3.5); // Muito mais lenta (boss)
+      FASE.quedaMs = Math.floor(FASE.quedaMs * 3.5); 
     } else {
       FASE.naves = Math.max(2, Math.floor(FASE.naves / (1 + fatorProgressao)));
       FASE.quedaMs = Math.floor(FASE.quedaMs * (1 + fatorProgressao)); 
+      
+      // REGRA: Vidas estritamente menores que a quantidade de naves
+      if (FASE.vidas >= FASE.naves) {
+        FASE.vidas = Math.max(1, FASE.naves - 1);
+      }
     }
 
     G = novoJogo($('nome').value.trim(), $('turma').value);
     G.isBoss = isUltimaFase;
-    G.escalaNaves = isUltimaFase ? 3 : (1 + fatorProgressao * 0.3); // Crescem
+    
+    // REGRA: Escala aumenta de pouquinho (+15%) a cada fase
+    G.escalaNaves = isUltimaFase ? 3 : (1 + (FASE_IDX * 0.15)); 
   }
 
   function contagem() {
@@ -509,13 +528,14 @@
     return { x, y, p };
   }
 
+  /* SALVANDO O MODELO DENTRO DA NAVE EM ATUALIZAR */
   function atualizar(now) {
     if (G.spawned < FASE.naves && now >= G.proxSpawn) {
       const modelo = FASE.modelos[G.sequencia[G.spawned]];
       const c = gerarConta(modelo);
       if (c) {
-        // Gera um tom de cor aleatório (Matiz: 0 a 360) para naves comuns
-        G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360) });
+        // Agora 'modelo' vai gravado no objeto da nave (para o anti-trapaça usar)
+        G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360), modelo: modelo });
         G.spawned++;
         G.proxSpawn += FASE.intervaloMs;
         hud();
@@ -832,7 +852,6 @@
         const escala = G.escalaNaves || 1;
         ctx.scale(escala, escala);
         
-        // Aplica a cor aleatória usando HSL para manter vivacidade, preservando a cor da Nave-mãe
         const corBase = G.isBoss ? '#b91c1c' : `hsl(${n.corH}, 80%, 35%)`;
         const corTopo = G.isBoss ? '#f87171' : `hsl(${n.corH}, 80%, 65%)`;
 
