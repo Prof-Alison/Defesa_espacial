@@ -510,7 +510,8 @@
       const modelo = FASE.modelos[G.sequencia[G.spawned]];
       const c = gerarConta(modelo);
       if (c) {
-        G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false });
+        // Gera um tom de cor aleatório (Matiz: 0 a 360) para naves comuns
+        G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360) });
         G.spawned++;
         G.proxSpawn += FASE.intervaloMs;
         hud();
@@ -827,8 +828,9 @@
         const escala = G.escalaNaves || 1;
         ctx.scale(escala, escala);
         
-        const corBase = G.isBoss ? '#b91c1c' : '#16a34a';
-        const corTopo = G.isBoss ? '#f87171' : '#86efac';
+        // Aplica a cor aleatória usando HSL para manter vivacidade, preservando a cor da Nave-mãe
+        const corBase = G.isBoss ? '#b91c1c' : `hsl(${n.corH}, 80%, 35%)`;
+        const corTopo = G.isBoss ? '#f87171' : `hsl(${n.corH}, 80%, 65%)`;
 
         ctx.fillStyle = corBase;
         ctx.beginPath(); ctx.ellipse(0, 0, 26, 11, 0, 0, Math.PI * 2); ctx.fill();
