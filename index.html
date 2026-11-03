@@ -149,7 +149,7 @@
   let G = null, AC = null;
   let emTelaCheia = false;
   const ESTRELAS = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.3 }));
-  let confetes = []; // <-- Array para guardar os confetes
+  let confetes = [];
   const ctx = $('cv').getContext('2d');
 
   /* ---------- Utilidades ---------- */
@@ -349,8 +349,8 @@
 
   function hud() {
     $('hud-fase').textContent = 'Fase ' + (FASE_IDX + 1) + ' · ' + (TEMA.titulo || TEMA.id);
-    $('contador').textContent = G.spawned;
-    $('total').textContent = FASE.naves;
+    $('contador').textContent = G.isBoss ? (G.destruidas > 0 ? 1 : 0) : G.spawned;
+    $('total').textContent = G.isBoss ? 1 : FASE.naves;
     $('vidas').textContent = 'Vidas: ' + '♥'.repeat(Math.max(0, G.vidas)) + '♡'.repeat(Math.max(0, FASE.vidas - G.vidas));
   }
 
@@ -396,7 +396,6 @@
         });
       }
     };
-    // 3 Explosões seguidas
     gerarLote();
     setTimeout(gerarLote, 400);
     setTimeout(gerarLote, 800);
@@ -497,6 +496,7 @@
 
     if (isUltimaFase) {
       FASE.naves = 1; 
+      FASE.vidas = 3;
       FASE.quedaMs = Math.floor(FASE.quedaMs * 3.5); 
     } else {
       FASE.naves = Math.max(2, Math.floor(FASE.naves / (1 + fatorProgressao)));
@@ -510,7 +510,7 @@
     G = novoJogo($('nome').value.trim(), $('turma').value);
     G.isBoss = isUltimaFase;
     G.escalaNaves = isUltimaFase ? 3 : (1 + (FASE_IDX * 0.15)); 
-    confetes = []; // Limpa confetes passados
+    confetes = []; 
   }
 
   function contagem() {
@@ -543,7 +543,7 @@
     return { x, y, p };
   }
 
-function atualizar(now) {
+  function atualizar(now) {
     if (G.spawned < FASE.naves && now >= G.proxSpawn) {
       const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
       const c = gerarConta(modelo);
@@ -568,7 +568,6 @@ function atualizar(now) {
         
         if (G.isBoss) {
           msg('A NAVE-MÃE ATINGIU A CABINE! Outra nave-mãe está descendo!', '#f87171');
-          // Se o aluno ainda tem vidas no chefão, permite descer outra Nave-Mãe
           if (G.vidas > 0) {
             G.spawned--; 
             G.proxSpawn = now + 1000;
@@ -581,51 +580,13 @@ function atualizar(now) {
     });
     G.naves = G.naves.filter(n => !n.fim);
 
-    // 1. Se acabou as vidas, é DERROTA imediata (mesmo no chefão)
     if (G.vidas <= 0) return fimDeJogo();
     
-    // 2. CONDIÇÃO DE VITÓRIA CORRIGIDA:
-    // Só passa de fase se todas as naves necessárias tiverem sido DESTRUÍDAS pelo tiro do jogador.
-    // Invasão (deixar a nave cair) NUNCA conta para a vitória!
     if (G.destruidas >= FASE.naves) {
       return fimDaFase();
     }
   }
 
-    G.naves.forEach(n => {
-      if (!n.fim && now - n.ini >= n.queda) {
-        n.fim = true;
-        G.invadidas++;
-        G.vidas--;
-        G.ajuda = true;  
-        G.tremor = 400;
-        som(160, 0.5, 'sawtooth');
-        
-        if (G.isBoss) {
-          msg('A NAVE-MÃE ATINGIU A CABINE! Outra nave-mãe está descendo!', '#f87171');
-          // Se o aluno ainda tem vidas no chefão, permite descer outra Nave-Mãe
-          if (G.vidas > 0) {
-            G.spawned--; 
-            G.proxSpawn = now + 1000;
-          }
-        } else {
-          msg('Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
-        }
-        hud();
-      }
-    });
-    G.naves = G.naves.filter(n => !n.fim);
-
-    // 1. Se acabou as vidas, é DERROTA imediata (mesmo no chefão)
-    if (G.vidas <= 0) return fimDeJogo();
-    
-    // 2. CONDIÇÃO DE VITÓRIA CORRIGIDA:
-    // Só passa de fase se todas as naves necessárias tiverem sido DESTRUÍDAS pelo tiro do jogador.
-    // Invasão (deixar a nave cair) NUNCA conta para a vitória!
-    if (G.destruidas >= FASE.naves) {
-      return fimDaFase();
-    }
-  }
   /* ---------- Resposta ---------- */
   function responder(v) {
     const agora = tempo();
@@ -672,7 +633,7 @@ function atualizar(now) {
       tema: TEMA.titulo || TEMA.id, 
       fase: FASE_IDX + 1,
       turma: G.turma,
-      nome: G.turma + ' - ' + G.nome,
+      nome: G.nome,
       resultado,
       naves_destruidas: G.destruidas,
       naves_invadidas: G.invadidas,
@@ -685,13 +646,11 @@ function atualizar(now) {
     G.estado = 'fim';
     const rel = relatorio('fase concluida');
     
-    // Título e Mensagem mudam se for a Nave-Mãe (última fase)
     const titulo = G.isBoss ? 'PARABÉNS, HERÓI!' : 'Terra salva nesta fase!';
     const msgVitoria = G.isBoss 
       ? G.nome + ', VOCÊ SALVOU O PLANETA! A Nave-Mãe foi destruída e a humanidade está segura graças aos seus cálculos. Vidas restantes: ' + G.vidas
       : G.nome + ', a frota alienígena desta fase foi destruída. Vidas restantes: ' + G.vidas;
 
-    // Efeitos da vitória final
     if (G.isBoss) {
       dispararConfetes();
       som(440, 0.1, 'sine');
@@ -718,7 +677,7 @@ function atualizar(now) {
     overlay(titulo, msgVitoria, [enviarBtn]);
   }
 
-function fimDeJogo() {
+  function fimDeJogo() {
     G.estado = 'fim';
     const rel = relatorio('derrota');
     const msgDerrota = G.isBoss 
@@ -740,6 +699,7 @@ function fimDeJogo() {
     };
     overlay('A Terra foi invadida!', msgDerrota, [enviarBtn]);
   }
+
   function reiniciar() {
     fecharOverlay();
     prepararFaseDinamicamente();
@@ -977,12 +937,11 @@ function fimDeJogo() {
 
     desenharCabine(now, ang);
     
-    // Desenha confetes se existirem (fica super bonito no fundo da caixa da vitória)
     if (confetes.length > 0) {
       confetes.forEach(c => {
         c.x += c.vx;
         c.y += c.vy;
-        c.vy += 0.35; // Gravidade
+        c.vy += 0.35;
         c.ang += c.rot;
         ctx.save();
         ctx.translate(c.x, c.y);
@@ -991,7 +950,6 @@ function fimDeJogo() {
         ctx.fillRect(-c.s / 2, -c.s / 2, c.s, c.s);
         ctx.restore();
       });
-      // Remove os que caíram da tela
       confetes = confetes.filter(c => c.y < H + 50);
     }
     
