@@ -3,31 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Investigação de Resíduos — Jogo de Defesa Espacial</title>
+  <title>Investigação de Resíduos — Projeto Integrador</title>
   <style>
     :root {
       --primary: #2e7d32;
-      --bg: #0b0e14;
-      --card: #161b22;
-      --text: #e6edf3;
-      --accent: #00e676;
-      --danger: #ff5252;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --danger: #c62828;
     }
     * { user-select: none; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background-color: var(--bg);
-      color: var(--text);
       margin: 0;
       padding: 20px;
-      overflow-x: hidden;
     }
-    
-    /* Tela de Inicialização Obrigatória */
+    /* Tela de Início / Bloqueio */
     #startScreen {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background: linear-gradient(135deg, #0d1b2a, #1b263b);
+      background: var(--primary);
       color: white;
       display: flex;
       flex-direction: column;
@@ -37,164 +32,159 @@
       text-align: center;
       padding: 20px;
     }
-    #startScreen h1 { font-size: 2.8rem; margin-bottom: 10px; color: var(--accent); }
-    #startScreen p { font-size: 1.1rem; max-width: 650px; margin-bottom: 25px; line-height: 1.6; }
+    #startScreen h1 { font-size: 2.5rem; margin-bottom: 10px; }
+    #startScreen p { font-size: 1.2rem; max-width: 600px; margin-bottom: 25px; }
     .btn-start {
-      background: var(--accent);
-      color: #000;
+      background: #ffffff;
+      color: var(--primary);
       border: none;
-      padding: 16px 45px;
-      font-size: 1.3rem;
+      padding: 15px 40px;
+      font-size: 1.2rem;
       font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
-      transition: transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    .btn-start:hover { transform: scale(1.05); }
+    .btn-start:hover { background: #e8f5e9; }
 
     /* HUD / Painel do Jogo */
     .hud {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #161b22;
+      background: var(--card);
       padding: 15px 25px;
       border-radius: 10px;
-      border: 1px solid #30363d;
-      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 15px;
       max-width: 850px;
       margin-left: auto;
       margin-right: auto;
     }
-    .hud-item { font-size: 1.1rem; font-weight: bold; }
+    .hud-item { font-size: 1rem; font-weight: bold; color: #333; }
     .hud-lives { color: var(--danger); }
-    .hud-phase { color: var(--accent); }
+    .hud-phase { color: var(--primary); }
 
     /* Arena Espacial */
     .space-arena {
       position: relative;
       width: 100%;
       max-width: 850px;
-      height: 240px;
+      height: 220px;
       margin: 0 auto 20px auto;
-      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
-      border: 2px solid #30363d;
+      background: #0b0e14;
       border-radius: 12px;
       overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     
-    /* 3 Naves Invasoras para Fases Comuns */
+    /* 3 Naves Invasoras */
     .ship-container {
       display: flex;
       justify-content: space-around;
       align-items: center;
       width: 100%;
-      height: 60px;
+      height: 50px;
       position: absolute;
       top: 10px;
-      transition: top 0.5s ease;
+      transition: top 0.4s ease;
     }
     .enemy-ship {
-      width: 70px;
-      height: 35px;
+      width: 65px;
+      height: 30px;
       background: linear-gradient(180deg, #7c4dff, #311b92);
-      border-radius: 40px 40px 15px 15px;
+      border-radius: 35px 35px 12px 12px;
       position: relative;
-      box-shadow: 0 0 12px #7c4dff;
+      box-shadow: 0 0 10px #7c4dff;
       transition: all 0.3s;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
     .enemy-ship::before {
       content: '';
       position: absolute;
-      top: -8px;
-      width: 30px;
-      height: 15px;
-      background: rgba(0, 230, 118, 0.7);
-      border-radius: 15px 15px 0 0;
+      top: -6px; left: 50%; transform: translateX(-50%);
+      width: 25px; height: 12px;
+      background: rgba(0, 230, 118, 0.8);
+      border-radius: 12px 12px 0 0;
     }
     .enemy-ship.destroyed {
-      opacity: 0.1;
+      opacity: 0.15;
       transform: scale(0.3);
       box-shadow: none;
     }
 
-    /* Nave Mãe (Fase Final) */
+    /* Nave Mãe (Fase Final - Formato Disco Voador Roxo) */
     .mother-ship {
       position: absolute;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      width: 260px;
-      height: 60px;
-      background: linear-gradient(180deg, #6a1b9a, #4a148c);
-      border-radius: 130px / 30px;
-      box-shadow: 0 0 25px #ab47bc;
+      width: 240px;
+      height: 55px;
+      background: linear-gradient(180deg, #7b1fa2, #4a148c);
+      border-radius: 120px / 28px;
+      box-shadow: 0 0 20px #ab47bc;
       border: 2px solid #e1bee7;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: top 0.5s ease;
+      transition: top 0.4s ease;
     }
     .mother-ship-dome {
-      width: 90px;
-      height: 35px;
+      width: 80px;
+      height: 30px;
       background: #ba68c8;
-      border-radius: 45px 45px 0 0;
+      border-radius: 40px 40px 0 0;
       position: absolute;
-      top: -20px;
-      opacity: 0.9;
+      top: -18px;
+      opacity: 0.95;
     }
     .mother-ship-lights {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       z-index: 2;
     }
     .light {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #00e676;
-      box-shadow: 0 0 8px #00e676;
+      box-shadow: 0 0 6px #00e676;
     }
-    .light:nth-child(even) { background: #ffeb3b; box-shadow: 0 0 8px #ffeb3b; }
+    .light:nth-child(even) { background: #ffeb3b; box-shadow: 0 0 6px #ffeb3b; }
 
-    /* Cabine de Comando (Jogador) */
+    /* Cabine de Comando */
     .command-cabin {
       position: absolute;
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: 180px;
-      height: 45px;
+      width: 170px;
+      height: 40px;
       background: #263238;
       border: 2px solid #455a64;
-      border-radius: 20px 20px 0 0;
+      border-radius: 15px 15px 0 0;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: var(--accent);
-      font-size: 0.85rem;
+      color: #00e676;
+      font-size: 0.8rem;
       font-weight: bold;
-      box-shadow: 0 -4px 15px rgba(0,230,118,0.2);
+      letter-spacing: 1px;
     }
 
-    /* Formulário Principal */
+    /* Container Principal */
     .container {
       max-width: 850px;
       margin: 0 auto;
       background: var(--card);
       padding: 30px;
       border-radius: 12px;
-      border: 1px solid #30363d;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     .text-box {
-      background: #0d1117;
-      border-left: 5px solid var(--accent);
+      background: #e8f5e9;
+      border-left: 5px solid var(--primary);
       padding: 15px;
       margin-bottom: 20px;
       border-radius: 4px;
@@ -202,53 +192,50 @@
       line-height: 1.5;
     }
     .section-title {
-      color: var(--accent);
-      border-bottom: 2px solid #30363d;
-      padding-bottom: 8px;
-      margin-top: 25px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 5px;
+      margin-top: 30px;
     }
     .form-group { margin-bottom: 20px; }
     label { font-weight: bold; display: block; margin-bottom: 8px; }
     input[type="text"], input[type="number"], select, textarea {
       width: 100%;
-      padding: 12px;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      color: var(--text);
+      padding: 10px;
+      border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 14px;
     }
     textarea { height: 80px; resize: vertical; }
-    .radio-group label { font-weight: normal; display: block; margin-bottom: 6px; cursor: pointer; }
+    .radio-group label { font-weight: normal; display: block; margin-bottom: 6px; }
     .btn-submit {
-      background: var(--accent);
-      color: #000;
+      background: var(--primary);
+      color: white;
       border: none;
-      padding: 16px;
+      padding: 15px;
       font-size: 1.1rem;
       font-weight: bold;
       width: 100%;
       border-radius: 6px;
       cursor: pointer;
       margin-top: 20px;
-      transition: background 0.2s;
     }
-    .btn-submit:hover { background: #00c853; }
+    .btn-submit:hover { background: #1b5e20; }
     #statusMsg {
       margin-top: 20px; padding: 15px; text-align: center;
       border-radius: 6px; display: none; font-weight: bold;
     }
-    .success { background: #1b5e20; color: #a5d6a7; }
-    .error { background: #b71c1c; color: #ffcdd2; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
   </style>
 </head>
 <body oncontextmenu="return false;">
 
   <!-- Tela de Inicialização Obrigatória -->
   <div id="startScreen">
-    <h1>🚀 Defesa Espacial: Resíduos</h1>
-    <p><strong>MODO SEGURO (TELA CHEIA):</strong> Responda às perguntas para destruir as naves inimigas. Se as naves invadirem e atingirem a Cabine de Comando, você perderá uma vida! Se alternar de aba (Alt+Tab) ou sair da tela cheia, a missão falhará e a jornada será REINICIADA.</p>
-    <button class="btn-start" onclick="iniciarJornada()">Iniciar Missão</button>
+    <h1>🌱 Investigação de Resíduos</h1>
+    <p><strong>ATENÇÃO:</strong> Esta atividade é realizada em MODO DE SEGURANÇA (Tela Cheia). Responda às questões e proteja a Cabine de Comando contra a invasão das naves. Se você tentar trocar de janela (Alt+Tab) ou sair da tela cheia, a atividade será REINICIADA e todas as suas respostas serão APAGADAS.</p>
+    <button class="btn-start" onclick="iniciarJornada()">Começar Atividade</button>
   </div>
 
   <!-- HUD de Vida e Fases -->
@@ -258,16 +245,16 @@
     <div class="hud-item" id="hudScore">🛸 Naves Abatidas: 0/3</div>
   </div>
 
-  <!-- Arena Espacial com Naves -->
+  <!-- Arena Espacial -->
   <div class="space-arena">
-    <!-- Container das 3 Naves Invasoras para Fases Comuns -->
+    <!-- 3 Naves Invasoras para Fases 1, 2 e 3 -->
     <div class="ship-container" id="regularShips">
       <div class="enemy-ship" id="ship1"></div>
       <div class="enemy-ship" id="ship2"></div>
       <div class="enemy-ship" id="ship3"></div>
     </div>
 
-    <!-- Nave Mãe para Fase Final -->
+    <!-- Nave Mãe para Fase Final 4 -->
     <div class="mother-ship" id="motherShip">
       <div class="mother-ship-dome"></div>
       <div class="mother-ship-lights">
@@ -281,11 +268,13 @@
   </div>
 
   <div class="container">
+    <h1 style="text-align: center; color: var(--primary);">📋 Relatório de Investigação Escolar</h1>
+
     <form id="investigacaoForm">
       <!-- Identificação -->
       <div class="form-group">
         <label for="equipe">Nome da Equipe / Integrantes:</label>
-        <input type="text" id="equipe" required placeholder="Ex: Esquadrão Verde - João, Maria e Pedro">
+        <input type="text" id="equipe" required placeholder="Ex: Grupo A - João, Maria e Pedro">
       </div>
       <div class="form-group">
         <label for="turma">Série e Turma:</label>
@@ -293,61 +282,61 @@
       </div>
 
       <!-- ETAPA 1 -->
-      <h2 class="section-title">FASE 1: O Cenário Nacional de Resíduos (Destrua 3 Naves)</h2>
+      <h2 class="section-title">ETAPA 1: O Cenário Nacional de Resíduos</h2>
       <div class="text-box">
         <strong>Texto de Leitura 1:</strong><br>
-        Segundo a ABREMA, em 2023 o Brasil produziu 81 milhões de toneladas de resíduos sólidos urbanos (RSU)[cite: 5, 69]. Isso equivale a 221 mil toneladas diárias[cite: 69]. A geração média foi de 382 kg por habitante ao ano[cite: 5, 69], o que corresponde a 1,05 kg por dia por pessoa[cite: 5]. O Brasil possui cerca de 203 milhões de habitantes[cite: 76, 77].
+        Segundo a ABREMA, em 2023 o Brasil produziu 81 milhões de toneladas de resíduos sólidos urbanos (RSU)[cite: 5, 69]. Isso equivale a 221 mil toneladas diárias[cite: 69]. A geração média foi de aproximadamente 382 kg por habitante ao ano[cite: 5, 69], o que corresponde a cerca de 1,05 kg por dia por pessoa[cite: 5]. O Brasil possui cerca de 203 milhões de habitantes[cite: 76, 77].
       </div>
 
       <div class="form-group">
-        <label for="p1_1">P1.1: Produção total de RSU no Brasil em 2023 (em milhões de toneladas)[cite: 5, 69]:</label>
-        <input type="number" id="p1_1" required onchange="validarResposta('p1_1', 81)">
+        <label for="p1_1">P1.1: Qual foi a produção total de RSU no Brasil em 2023 (em milhões de toneladas)[cite: 5, 69]?</label>
+        <input type="number" id="p1_1" required placeholder="Digite o número" onchange="validarResposta('p1_1', 81)">
       </div>
       <div class="form-group">
-        <label for="p1_2">P1.2: Toneladas de lixo geradas por dia no Brasil[cite: 69]:</label>
-        <input type="number" id="p1_2" required onchange="validarResposta('p1_2', 221000)">
+        <label for="p1_2">P1.2: Quantas toneladas de lixo são geradas por dia no Brasil[cite: 69]?</label>
+        <input type="number" id="p1_2" required placeholder="Ex: 221000" onchange="validarResposta('p1_2', 221000)">
       </div>
       <div class="form-group">
-        <label for="p1_3">P1.3: Quilos de lixo gerados por habitante ao ano[cite: 5, 69]:</label>
-        <input type="number" id="p1_3" required onchange="validarResposta('p1_3', 382)">
+        <label for="p1_3">P1.3: Quantos kg de lixo um brasileiro gera, em média, por ano[cite: 5, 69]?</label>
+        <input type="number" id="p1_3" required placeholder="Digite em kg" onchange="validarResposta('p1_3', 382)">
       </div>
       <div class="form-group">
-        <label for="p1_4">P1.4 (Cálculo): Dividindo 382 kg por 365 dias, qual a geração diária por pessoa em kg[cite: 5]?</label>
+        <label for="p1_4">P1.4 (Cálculo): Dividindo 382 kg por 365 dias, qual é a geração diária por pessoa[cite: 5]?</label>
         <input type="number" step="0.01" id="p1_4" required placeholder="Ex: 1.05">
       </div>
       <div class="form-group">
-        <label for="p1_5">P1.5 (Cálculo): Lixo mensal de uma família de 4 pessoas (média 1,046 kg/dia/pessoa)[cite: 74, 77, 78]:</label>
+        <label for="p1_5">P1.5 (Cálculo): Considerando uma família de 4 pessoas por 30 dias (média de 1,046 kg/dia por pessoa), qual o lixo mensal da família em kg[cite: 74, 77, 78]?</label>
         <input type="number" step="0.01" id="p1_5" required placeholder="Ex: 125.52">
       </div>
 
       <!-- ETAPA 2 -->
-      <h2 class="section-title">FASE 2: Resíduos Orgânicos e Compostagem</h2>
+      <h2 class="section-title">ETAPA 2: Resíduos Orgânicos e Compostagem</h2>
       <div class="text-box">
         <strong>Texto de Leitura 2:</strong><br>
-        45,3% do lixo no Brasil é matéria orgânica[cite: 7, 8, 39, 80]. Menos de 2% é reciclado ou destinado à compostagem[cite: 4, 81]. O restante em aterros gera chorume e gás metano, que agravam o aquecimento global[cite: 4, 38, 71, 72].
+        Do total de resíduos no Brasil, 45,3% correspondem à matéria orgânica (restos de alimentos, cascas e podas)[cite: 7, 8, 39, 80]. Menos de 2% de toda a matéria orgânica é reciclada ou destinada à compostagem[cite: 4, 81]. O restante vai para aterros e lixões, onde o apodrecimento anaeróbio gera chorume e gás metano, que agravam o aquecimento global[cite: 4, 38, 71, 72].
       </div>
 
       <div class="form-group">
-        <label for="p2_1">P2.1: Porcentagem (%) de matéria orgânica no lixo do Brasil[cite: 7, 8, 39, 80]:</label>
+        <label for="p2_1">P2.1: Qual a porcentagem exata (%) de matéria orgânica no lixo do Brasil[cite: 7, 8, 39, 80]?</label>
         <input type="number" step="0.1" id="p2_1" required placeholder="Ex: 45.3">
       </div>
       <div class="form-group">
-        <label for="p2_2">P2.2 (Cálculo): Toneladas de matéria orgânica geradas (45,3% de 81 milhões)[cite: 5, 8, 69, 80]:</label>
+        <label for="p2_2">P2.2 (Cálculo): Sabendo que o Brasil gera 81 milhões de toneladas, quantas toneladas correspondem à matéria orgânica (45,3% de 81 milhões)[cite: 5, 8, 69, 80]?</label>
         <input type="number" step="0.01" id="p2_2" required placeholder="Ex: 36.69">
       </div>
       <div class="form-group">
-        <label for="p2_3">P2.3: Percentual de resíduos orgânicos destinados à compostagem no Brasil[cite: 4, 81]:</label>
+        <label for="p2_3">P2.3: Qual o percentual de resíduos orgânicos destinados à compostagem no Brasil[cite: 4, 81]?</label>
         <select id="p2_3" required>
-          <option value="">Selecione...</option>
+          <option value="">Selecione uma opção...</option>
           <option value="Menos de 2%">Menos de 2%</option>
           <option value="Exatamente 15%">Exatamente 15%</option>
           <option value="Mais de 30%">Mais de 30%</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="p2_4">P2.4: Impactos ambientais citados no texto[cite: 4, 38, 71, 72]:</label>
+        <label for="p2_4">P2.4: Quais são os dois principais impactos ambientais do descarte inadequado de orgânicos citados no texto[cite: 4, 38, 71, 72]?</label>
         <select id="p2_4" required>
-          <option value="">Selecione...</option>
+          <option value="">Selecione uma opção...</option>
           <option value="Geração de chorume e gás metano">Geração de chorume e gás metano</option>
           <option value="Poluição por microplásticos e metais pesados">Poluição por microplásticos e metais pesados</option>
           <option value="Contaminação apenas por poeira">Contaminação apenas por poeira</option>
@@ -355,69 +344,69 @@
       </div>
 
       <!-- ETAPA 3 -->
-      <h2 class="section-title">FASE 3: Mapeamento Físico da Escola</h2>
+      <h2 class="section-title">ETAPA 3: Mapeamento Físico da Escola</h2>
       <div class="text-box">
-        Visitem as áreas da escola para coletar dados verificáveis[cite: 46, 47].
+        Visitem os pontos indicados da escola e registrem a infraestrutura existente[cite: 46, 47].
       </div>
 
       <div class="form-group radio-group">
-        <label>P3.1: Tipo de lixeiras disponíveis no pátio principal[cite: 46]:</label>
+        <label>P3.1: No pátio principal, as lixeiras disponíveis são de qual tipo[cite: 46]?</label>
         <label><input type="radio" name="p3_1" value="Apenas lixeiras comuns sem separação" required> Apenas lixeiras comuns sem separação</label>
         <label><input type="radio" name="p3_1" value="Lixeiras de coleta seletiva separadas por cor"> Lixeiras de coleta seletiva separadas por cor</label>
         <label><input type="radio" name="p3_1" value="Lixeiras exclusivas para resíduos orgânicos"> Lixeiras exclusivas para resíduos orgânicos</label>
       </div>
       <div class="form-group">
-        <label for="p3_2">P3.2: Quantidade de conjuntos de lixeiras seletivas no corredor da sua sala[cite: 47]:</label>
-        <input type="number" id="p3_2" required>
+        <label for="p3_2">P3.2: Quantos conjuntos completos de lixeiras seletivas existem no corredor do bloco da sua sala[cite: 47]?</label>
+        <input type="number" id="p3_2" required placeholder="Contagem exata">
       </div>
       <div class="form-group radio-group">
-        <label>P3.3: Há recipiente exclusivo para restos de comida no refeitório[cite: 46, 47]?</label>
+        <label>P3.3: No refeitório/cantina, existe recipiente específico apenas para restos de comida e cascas[cite: 46, 47]?</label>
         <label><input type="radio" name="p3_3" value="Sim, há lixeira específica para orgânicos" required> Sim, há lixeira específica para orgânicos</label>
         <label><input type="radio" name="p3_3" value="Não, tudo é descartado junto no lixo comum"> Não, tudo é descartado junto no lixo comum</label>
       </div>
       <div class="form-group">
-        <label for="p3_4">P3.4: Ponto crítico de maior acúmulo de resíduos[cite: 46, 48]:</label>
+        <label for="p3_4">P3.4: Qual área apresenta a maior quantidade de resíduos acumulados nas lixeiras no intervalo[cite: 46, 48]?</label>
         <select id="p3_4" required>
-          <option value="">Selecione...</option>
+          <option value="">Selecione o local...</option>
           <option value="Cantina/Refeitório">Cantina/Refeitório</option>
           <option value="Quadra Esportiva">Quadra Esportiva</option>
           <option value="Corredores das Salas">Corredores das Salas</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="p3_5">P3.5: Resíduo mais descartado na cantina/refeitório[cite: 46]:</label>
+        <label for="p3_5">P3.5: Qual o resíduo reciclável mais descartado na cantina/refeitório (observe as lixeiras)[cite: 46]?</label>
         <select id="p3_5" required>
-          <option value="">Selecione...</option>
+          <option value="">Selecione o tipo...</option>
           <option value="Garrafas PET / Copos plásticos">Garrafas PET / Copos plásticos</option>
           <option value="Embalagens de papel/papelão">Embalagens de papel/papelão</option>
           <option value="Latas de alumínio">Latas de alumínio</option>
         </select>
       </div>
 
-      <!-- ETAPA 4: NAVE MÃE -->
-      <h2 class="section-title">FASE FINAL: A Invasão da Nave Mãe</h2>
+      <!-- ETAPA 4 -->
+      <h2 class="section-title">ETAPA 4: Cálculo Financeiro e Projeção (Invasão da Nave Mãe)</h2>
       <div class="text-box">
-        <strong>ALERTA DE INVASÃO:</strong> A Nave Mãe está descendo em direção à Cabine de Comando! Responda corretamente aos cálculos para detê-la[cite: 106, 134, 160, 198].
+        <strong>Dados para simulação:</strong> Consumo mensal de 240.000 garrafas PET em uma comunidade[cite: 106, 134, 160, 198]. Cada garrafa reciclada gera R$ 0,05 de economia em transporte e aterro[cite: 107, 135, 137].
       </div>
 
       <div class="form-group">
-        <label for="p4_1">P4.1 (Cálculo): Economia mensal no Cenário Inicial (20% de 240.000 garrafas = 48.000 x R$ 0,05)[cite: 106, 135, 136, 137, 199]:</label>
-        <input type="number" step="0.01" id="p4_1" required onchange="processarFaseFinal('p4_1', 2400)">
+        <label for="p4_1">P4.1 (Cálculo): Economia mensal no Cenário Inicial (20% reciclado = 48.000 garrafas x R$ 0,05)[cite: 106, 135, 136, 137, 199]?</label>
+        <input type="number" step="0.01" id="p4_1" required placeholder="Valor em R$" onchange="processarFaseFinal('p4_1', 2400)">
       </div>
       <div class="form-group">
-        <label for="p4_2">P4.2 (Cálculo): Economia mensal no Novo Cenário (28% = 67.200 garrafas x R$ 0,05)[cite: 134, 135, 136, 137, 168, 169]:</label>
-        <input type="number" step="0.01" id="p4_2" required onchange="processarFaseFinal('p4_2', 3360)">
+        <label for="p4_2">P4.2 (Cálculo): Economia mensal no Novo Cenário (28% reciclado = 67.200 garrafas x R$ 0,05)[cite: 134, 135, 136, 137, 168, 169]?</label>
+        <input type="number" step="0.01" id="p4_2" required placeholder="Valor em R$" onchange="processarFaseFinal('p4_2', 3360)">
       </div>
       <div class="form-group">
-        <label for="p4_3">P4.3 (Cálculo): Economia extra em 1 ano (Diferença de R$ 960,00 x 12)[cite: 135, 136, 137]:</label>
-        <input type="number" step="0.01" id="p4_3" required onchange="processarFaseFinal('p4_3', 11520)">
+        <label for="p4_3">P4.3 (Cálculo): Valor extra economizado em 1 ano (12 meses) na mudança de cenário (Diferença de R$ 960,00 x 12)[cite: 135, 136, 137]?</label>
+        <input type="number" step="0.01" id="p4_3" required placeholder="Valor em R$" onchange="processarFaseFinal('p4_3', 11520)">
       </div>
       <div class="form-group">
-        <label for="p4_4">P4.4: A infraestrutura de reciclagem da escola está adequada ou insuficiente[cite: 47]? Justifique.</label>
-        <textarea id="p4_4" required></textarea>
+        <label for="p4_4">P4.4: Com base na contagem de lixeiras da Etapa 3, a infraestrutura da escola está adequada ou insuficiente[cite: 47]? Justifique.</label>
+        <textarea id="p4_4" required placeholder="Escreva a justificativa baseada nos dados contados..."></textarea>
       </div>
       <div class="form-group">
-        <label for="p4_5">P4.5: Destino prioritário dos recursos economizados na escola[cite: 105, 138, 171]:</label>
+        <label for="p4_5">P4.5: Em qual área o dinheiro economizado com a reciclagem deveria ser investido na escola[cite: 105, 138, 171]?</label>
         <select id="p4_5" required>
           <option value="">Selecione...</option>
           <option value="Compra de materiais pedagógicos e esportivos">Compra de materiais pedagógicos e esportivos</option>
@@ -427,17 +416,18 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="p4_6">P4.6: Frase com ação prática imediata para a turma[cite: 47]:</label>
-        <textarea id="p4_6" required></textarea>
+        <label for="p4_6">P4_6: Escreva uma frase com uma ação imediata que a turma pode adotar hoje para não misturar os resíduos[cite: 47].</label>
+        <textarea id="p4_6" required placeholder="Ação prática imediata..."></textarea>
       </div>
 
-      <button type="submit" class="btn-submit" id="btnSubmit">💥 Disparar e Destruir Nave Mãe</button>
+      <button type="submit" class="btn-submit" id="btnSubmit">🚀 Finalizar e Enviar Relatório</button>
     </form>
 
     <div id="statusMsg"></div>
   </div>
 
 <script>
+  // ATENÇÃO: COLE SEU URL DO APPS SCRIPT NA VARIÁVEL ABAIXO
   const APPS_SCRIPT_URL = "SEU_URL_DO_APPS_SCRIPT_AQUI";
 
   let jogoIniciado = false;
@@ -449,8 +439,11 @@
 
   function iniciarJornada() {
     let elem = document.documentElement;
-    if (elem.requestFullscreen) { elem.requestFullscreen(); }
-    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
 
     document.getElementById('startScreen').style.display = 'none';
     jogoIniciado = true;
@@ -459,7 +452,7 @@
 
   function reiniciarPorInfracao() {
     if (!jogoIniciado) return;
-    alert("🚨 INFRAÇÃO DETECTADA!\nVocê alternou de janela ou saiu da Tela Cheia.\nA Cabine foi destruída e a atividade foi REINICIADA.");
+    alert("🚨 INFRAÇÃO DETECTADA!\nVocê saiu da Tela Cheia ou alternou de janela (Alt+Tab).\nA atividade foi reiniciada e os dados foram apagados.");
     resetTotal();
   }
 
@@ -500,26 +493,24 @@
         atualizarHUD();
       }
     } else {
-      // Se errar a resposta, a nave desce mais um nível em direção à cabine
+      // Se a resposta for incorreta, a frota desce um nível
       avancarNavesInvasoras();
     }
   }
 
-  // Avanço das Naves Comuns (Fases 1, 2 e 3)
   function avancarNavesInvasoras() {
     alturaNaves += 40;
     const container = document.getElementById('regularShips');
     container.style.top = alturaNaves + 'px';
 
-    // Se atingir a Cabine de Comando (posição >= 140px), ocorre uma INVASÃO
-    if (alturaNaves >= 140) {
+    // Se as naves invadirem a Cabine de Comando (posição >= 130px), PERDE 1 VIDA
+    if (alturaNaves >= 130) {
       registrarInvasao("As naves invasoras atingiram a Cabine de Comando!");
       alturaNaves = 10;
       container.style.top = '10px';
     }
   }
 
-  // Avanço da Nave Mãe (Fase Final 4)
   function processarFaseFinal(inputId, valorCorreto) {
     if (faseAtual !== 4) {
       faseAtual = 4;
@@ -529,51 +520,61 @@
 
     const input = document.getElementById(inputId);
     if (parseFloat(input.value) !== valorCorreto) {
-      // Resposta incorreta faz a Nave Mãe avançar mais rápido em direção à cabine
-      alturaNaveMae += 45;
+      alturaNaveMae += 45; // Erro faz a Nave Mãe descer mais rápido
     } else {
-      // Resposta correta recua um pouco a Nave Mãe
-      alturaNaveMae = Math.max(10, alturaNaveMae - 15);
+      alturaNaveMae = Math.max(10, alturaNaveMae - 15); // Acerto empurra a Nave Mãe de volta
     }
 
     const motherShipElem = document.getElementById('motherShip');
     motherShipElem.style.top = alturaNaveMae + 'px';
 
-    // Se a Nave Mãe alcançar a Cabine de Comando (posição >= 130px), ocorre uma INVASÃO
-    if (alturaNaveMae >= 130) {
-      registrarInvasao("A NAVE MÃE INVADIU E ATINGIU A CABINE DE COMANDO!");
+    // Se a Nave Mãe invadir a Cabine de Comando (posição >= 120px), PERDE 1 VIDA
+    if (alturaNaveMae >= 120) {
+      registrarInvasao("A NAVE MÃE ATINGIU A CABINE DE COMANDO!");
       alturaNaveMae = 10;
       motherShipElem.style.top = '10px';
     }
   }
 
-  // Ocorre Perda de Vida APENAS se houver INVASÃO da Cabine
   function registrarInvasao(mensagem) {
     vidas--;
     atualizarHUD();
-    alert(`💥 INVASÃO CONFIRMADA!\n${mensagem}\nVocê perdeu 1 vida da Cabine.`);
+    alert(`💥 INVASÃO DETECTADA!\n${mensagem}\nVocê perdeu 1 vida da Cabine.`);
 
     if (vidas <= 0) {
-      alert("🚨 TODAS AS VIDAS FORAM PERDIDAS POR INVASÃO! A Cabine de Comando foi destruída.");
+      alert("🚨 TODAS AS VIDAS FORAM PERDIDAS POR INVASÃO! A missão falhou.");
       resetTotal();
     }
   }
 
-  // Trava de Tela Cheia e Mudança de Aba
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && jogoIniciado) reiniciarPorInfracao();
+  // Detecta alteração no modo Tela Cheia
+  document.addEventListener('fullscreenchange', function() {
+    if (!document.fullscreenElement && jogoIniciado) {
+      reiniciarPorInfracao();
+    }
   });
-  window.addEventListener('blur', () => {
-    if (jogoIniciado) reiniciarPorInfracao();
+
+  // Detecta quando o aluno muda de aba/janela (Alt+Tab ou clique fora)
+  window.addEventListener('blur', function() {
+    if (jogoIniciado) {
+      reiniciarPorInfracao();
+    }
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'F12' || (e.altKey && e.key === 'Tab')) {
+
+  // Bloqueio de Teclas de Atalho (F12, Alt+Tab, Tab, Ctrl+N, Ctrl+T, etc)
+  document.addEventListener('keydown', function(e) {
+    if (
+      e.key === 'F12' ||
+      (e.altKey && e.key === 'Tab') ||
+      (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+      (e.ctrlKey && (e.key === 'u' || e.key === 't' || e.key === 'n'))
+    ) {
       e.preventDefault();
       if (jogoIniciado) reiniciarPorInfracao();
     }
   });
 
-  // Envio Final do Formulário para a Planilha do Google
+  // Processo de envio do formulário
   document.getElementById('investigacaoForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -581,7 +582,7 @@
     const msg = document.getElementById('statusMsg');
 
     btn.disabled = true;
-    btn.innerText = "💥 Disparando pulso final...";
+    btn.innerText = "Enviando relatório...";
 
     const getRadio = name => {
       const el = document.querySelector(`input[name="${name}"]:checked`);
@@ -621,20 +622,23 @@
     })
     .then(() => {
       msg.className = "success";
-      msg.innerText = "🏆 VITÓRIA! A Nave Mãe foi destruída e o relatório enviado!";
+      msg.innerText = "✅ Relatório enviado com sucesso! A Nave Mãe foi derrotada!";
       msg.style.display = "block";
+      document.getElementById('investigacaoForm').reset();
       btn.disabled = false;
-      btn.innerText = "🚀 Missão Concluída";
+      btn.innerText = "🚀 Finalizar e Enviar Relatório";
       jogoIniciado = false;
       if (document.exitFullscreen) document.exitFullscreen();
     })
-    .catch(() => {
+    .catch(err => {
       msg.className = "error";
-      msg.innerText = "❌ Erro ao enviar os dados. Tente novamente.";
+      msg.innerText = "❌ Ocorreu um erro ao enviar. Tente novamente.";
       msg.style.display = "block";
       btn.disabled = false;
+      btn.innerText = "🚀 Finalizar e Enviar Relatório";
     });
   });
 </script>
+
 </body>
 </html>
