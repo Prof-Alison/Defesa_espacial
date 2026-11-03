@@ -280,7 +280,7 @@
 
   function montarSequencia() {
     const mods = FASE.modelos;
-    return Array.from({ length: FASE.naves }, (_, i) => i % mods.length);
+    return Array.from({ length: 999 }, (_, i) => i % mods.length);
   }
 
   function quedaDo(modelo) {
@@ -298,7 +298,7 @@
     return {
       nome, turma, vidas: FASE.vidas, naves: [], spawned: 0, destruidas: 0, invadidas: 0, erros: 0,
       sequencia: montarSequencia(), textosUsados: new Set(),
-      tremor: 0, estado: 'contagem', proxSpawn: 0, explosoes: [], laser: null,
+      tremor: 0, estado: 'contagem', explosoes: [], laser: null,
       ang: -Math.PI / 2, ajuda: false, desloc: 0, pausaEm: null,
       isBoss: false, escalaNaves: 1
     };
@@ -486,7 +486,6 @@
   }
 
   function comecarFase() {
-    G.proxSpawn = tempo();
     G.estado = 'jogo';
     hud();
     msg(G.isBoss ? 'A NAVE-MÃE ESTÁ DESCENDO! DESTRUA-A!' : 'Destrua as naves antes que cheguem à cabine!', G.isBoss ? '#f87171' : '#93c5fd');
@@ -502,15 +501,14 @@
   }
 
   function atualizar(now) {
-    if (G.naves.length === 0 && G.spawned < FASE.naves && now >= G.proxSpawn) {
+    // CORREÇÃO: se não há nenhuma nave na tela e o jogador ainda não destruiu o total da fase, gera a próxima imediatamente
+    if (G.naves.length === 0 && G.destruidas < FASE.naves) {
       const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
       const c = gerarConta(modelo);
       if (c) {
         G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360), modelo: modelo });
         G.spawned++;
         hud();
-      } else {
-        G.proxSpawn = now + 100;   
       }
     }
 
@@ -525,13 +523,8 @@
         
         if (G.isBoss) {
           msg('A NAVE-MÃE ATINGIU A CABINE! Ela está voltando com um novo código!', '#f87171');
-          if (G.vidas > 0) {
-            G.spawned--; 
-            G.proxSpawn = now + 500;
-          }
         } else {
           msg('Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
-          G.proxSpawn = now + 500;
         }
         hud();
       }
@@ -566,8 +559,6 @@
     G.naves = G.naves.filter(x => x !== n);
     G.destruidas++;
     G.ajuda = false;
-    
-    G.proxSpawn = 0; 
     
     G.laser = { x1: pos.x, y1: pos.y, t: 0 };
     G.explosoes.push({ x: pos.x, y: pos.y, t: 0, isBoss: G.isBoss });
