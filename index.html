@@ -33,6 +33,7 @@
   .btn-verde { background: #22c55e; color: #052e16; }
   .btn-cinza { background: #475569; color: #fff; }
 
+  /* Correção do botão sobreposto */
   #btn-start { position: relative; z-index: 10; margin-bottom: 20px; }
 
   .nave-inicio { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); width: 240px; height: 58px; z-index: 1; }
@@ -109,7 +110,7 @@
   <section id="tela-jogo" class="tela">
     <div class="hud">
       <span id="hud-fase"></span>
-      <span>Invasores Destruídos: <b id="contador">0</b>/<b id="total">0</b></span>
+      <span>Invasores: <b id="contador">0</b>/<b id="total">0</b></span>
       <span id="vidas"></span>
     </div>
     <div id="cena">
@@ -154,6 +155,7 @@
   /* ---------- Utilidades ---------- */
   const ri = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
   const pot = c => Math.pow(10, c);
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
   function embaralhar(arr) {
     const r = arr.slice();
@@ -184,7 +186,18 @@
   function validarFase(f) {
     const erros = [];
     if (!f || typeof f !== 'object') return ['fase inválida'];
+    if (!(f.naves > 0)) erros.push('"naves"');
+    if (!(f.vidas > 0)) erros.push('"vidas"');
+    if (!(f.intervaloMs > 0)) erros.push('"intervaloMs"');
+    if (!(f.quedaMs > 0)) erros.push('"quedaMs"');
     if (!Array.isArray(f.modelos) || !f.modelos.length) erros.push('"modelos"');
+    (f.modelos || []).forEach(m => {
+      if (!SIMBOLO[m.operacao]) erros.push('operação inválida em ' + m.id);
+      ['a', 'b'].forEach(k => {
+        const v = m[k];
+        if (!v || !(v.min <= v.max) || !Number.isInteger(v.casas ?? 0)) erros.push('faixa ' + k + ' em ' + m.id);
+      });
+    });
     return erros;
   }
 
@@ -289,19 +302,20 @@
 
   function montarSequencia() {
     const mods = FASE.modelos;
-    return embaralhar(Array.from({ length: 300 }, (_, i) => i % mods.length));
+    if (FASE.distribuicao) {
+      const seq = [];
+      Object.entries(FASE.distribuicao).forEach(([id, qtd]) => {
+        const idx = mods.findIndex(m => m.id === id);
+        for (let i = 0; i < qtd; i++) seq.push(idx);
+      });
+      return embaralhar(seq);
+    }
+    return embaralhar(Array.from({ length: FASE.naves }, (_, i) => i % mods.length));
   }
 
   function quedaDo(modelo) {
-    const tempoBase = modelo.quedaMs || FASE.quedaMs || 12000;
-    
-    // AUMENTO SIGNIFICATIVO DE TEMPO
-    // Temas difíceis como operacao_decimais_2 ganham 6.5x o tempo base para cálculo tranquilo.
-    // Todas as outras fases recebem 4.0x o tempo base.
-    const ehTemaDificil = TEMA && TEMA.id && (TEMA.id.includes('decimais_2') || TEMA.id.includes('operacao_decimais_2'));
-    const multiplicador = ehTemaDificil ? 6.5 : 4.0;
-
-    return Math.floor(tempoBase * multiplicador); 
+    if (G.ajuda) return modelo.quedaFacilMs || FASE.quedaFacilMs || FASE.quedaMs;
+    return modelo.quedaMs || FASE.quedaMs;
   }
 
   /* ---------- Relógio e Jogo ---------- */
@@ -312,7 +326,7 @@
 
   function novoJogo(nome, turma) {
     return {
-      nome, turma, vidas: 3, naves: [], spawned: 0, destruidas: 0, invadidas: 0, erros: 0,
+      nome, turma, vidas: FASE.vidas, naves: [], spawned: 0, destruidas: 0, invadidas: 0, erros: 0,
       sequencia: montarSequencia(), textosUsados: new Set(),
       tremor: 0, estado: 'contagem', proxSpawn: 0, explosoes: [], laser: null,
       ang: -Math.PI / 2, ajuda: false, desloc: 0, pausaEm: null,
@@ -335,9 +349,9 @@
 
   function hud() {
     $('hud-fase').textContent = 'Fase ' + (FASE_IDX + 1) + ' · ' + (TEMA.titulo || TEMA.id);
-    $('contador').textContent = G.destruidas;
-    $('total').textContent = FASE.naves;
-    $('vidas').textContent = 'Vidas: ' + '♥'.repeat(Math.max(0, G.vidas)) + '♡'.repeat(Math.max(0, 3 - G.vidas));
+    $('contador').textContent = G.isBoss ? (G.destruidas > 0 ? 1 : 0) : G.spawned;
+    $('total').textContent = G.isBoss ? 1 : FASE.naves;
+    $('vidas').textContent = 'Vidas: ' + '♥'.repeat(Math.max(0, G.vidas)) + '♡'.repeat(Math.max(0, FASE.vidas - G.vidas));
   }
 
   function mostrar(id) {
@@ -478,14 +492,24 @@
     FASE = JSON.parse(JSON.stringify(TEMA.fases[FASE_IDX]));
     
     const isUltimaFase = (FASE_IDX === TEMA.fases.length - 1);
+    let fatorProgressao = FASE_IDX * 0.3; 
 
-    // Vidas fixas em 3 e meta fixa de 3 naves para todas as fases normais
-    FASE.vidas = 3;
-    FASE.naves = isUltimaFase ? 1 : 3;
+    if (isUltimaFase) {
+      FASE.naves = 1; 
+      FASE.vidas = 3;
+      FASE.quedaMs = Math.floor(FASE.quedaMs * 3.5); 
+    } else {
+      FASE.naves = Math.max(2, Math.floor(FASE.naves / (1 + fatorProgressao)));
+      FASE.quedaMs = Math.floor(FASE.quedaMs * (1 + fatorProgressao)); 
+      
+      if (FASE.vidas >= FASE.naves) {
+        FASE.vidas = Math.max(1, FASE.naves - 1);
+      }
+    }
 
     G = novoJogo($('nome').value.trim(), $('turma').value);
     G.isBoss = isUltimaFase;
-    G.escalaNaves = isUltimaFase ? 3 : 1; 
+    G.escalaNaves = isUltimaFase ? 3 : (1 + (FASE_IDX * 0.15)); 
     confetes = []; 
   }
 
@@ -504,7 +528,7 @@
   }
 
   function comecarFase() {
-    G.proxSpawn = tempo() + 1000;
+    G.proxSpawn = tempo() + 1500;
     G.estado = 'jogo';
     hud();
     msg(G.isBoss ? 'A NAVE-MÃE ESTÁ DESCENDO! DESTRUA-A!' : 'Destrua as naves antes que cheguem à cabine!', G.isBoss ? '#f87171' : '#93c5fd');
@@ -520,18 +544,16 @@
   }
 
   function atualizar(now) {
-    // NUNCA gera mais de 1 nave simultânea.
-    // Continua gerando até completar o objetivo da fase (3 destruídas) ou perder as 3 vidas.
-    if (G.naves.length === 0 && G.destruidas < FASE.naves && now >= G.proxSpawn) {
+    if (G.spawned < FASE.naves && now >= G.proxSpawn) {
       const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
       const c = gerarConta(modelo);
       if (c) {
-        // Genuíno tempo 'ini: now' para garantir velocidade idêntica caso a Nave-Mãe ressurja
         G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360), modelo: modelo });
         G.spawned++;
+        G.proxSpawn += FASE.intervaloMs;
         hud();
       } else {
-        G.proxSpawn = now + 500;   
+        G.proxSpawn = now + 800;   
       }
     }
 
@@ -539,32 +561,27 @@
       if (!n.fim && now - n.ini >= n.queda) {
         n.fim = true;
         G.invadidas++;
-        G.vidas--; // Perde vida APENAS ao invadir a cabine
+        G.vidas--;
         G.ajuda = true;  
         G.tremor = 400;
         som(160, 0.5, 'sawtooth');
         
         if (G.isBoss) {
           msg('A NAVE-MÃE ATINGIU A CABINE! Outra nave-mãe está descendo!', '#f87171');
+          if (G.vidas > 0) {
+            G.spawned--; 
+            G.proxSpawn = now + 1000;
+          }
         } else {
           msg('Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
-        }
-
-        // Caso ainda possua vidas, agenda o nascimento da nova nave em velocidade normal
-        if (G.vidas > 0) {
-          G.proxSpawn = now + 1000;
         }
         hud();
       }
     });
-    
-    // Limpa a nave da tela
     G.naves = G.naves.filter(n => !n.fim);
 
-    // 1. Derrota por invasões (0 vidas)
     if (G.vidas <= 0) return fimDeJogo();
     
-    // 2. Vitória ao destruir a quantidade requerida de naves (3 destruídas)
     if (G.destruidas >= FASE.naves) {
       return fimDaFase();
     }
@@ -581,8 +598,7 @@
       G.erros++;
       G.ajuda = true; 
       G.tremor = 200;
-      // NÃO perde vida por erro de digitação/cálculo
-      msg('Ainda não é essa resposta. Tente novamente!', '#f87171');
+      msg('Ainda não é essa resposta.', '#f87171');
       return;
     }
 
@@ -591,10 +607,7 @@
     G.naves = G.naves.filter(x => x !== n);
     G.destruidas++;
     G.ajuda = false;
-    
-    // Nascimentos rápidos da próxima nave após destruição
-    G.proxSpawn = agora + 600; 
-
+    G.proxSpawn = agora; 
     G.laser = { x1: pos.x, y1: pos.y, t: 0 };
     G.explosoes.push({ x: pos.x, y: pos.y, t: 0, isBoss: G.isBoss });
     som(1400, 0.12, 'square');
@@ -834,7 +847,6 @@
     ESTRELAS.forEach(s => { ctx.globalAlpha = s.s / 2; ctx.fillRect(s.x, s.y, s.s, s.s); });
     ctx.globalAlpha = 1;
 
-    // Desenho fixo do topo (Nave-Mãe ou estação do topo)
     const pulso = 0.6 + Math.sin(now / 300) * 0.4;
     const halo = ctx.createRadialGradient(W / 2, 50, 20, W / 2, 50, 160);
     halo.addColorStop(0, 'rgba(168,85,247,' + (0.4 * pulso) + ')');
