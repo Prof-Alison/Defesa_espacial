@@ -543,9 +543,9 @@
     return { x, y, p };
   }
 
-  function atualizar(now) {
+function atualizar(now) {
     if (G.spawned < FASE.naves && now >= G.proxSpawn) {
-      const modelo = FASE.modelos[G.sequencia[G.spawned]];
+      const modelo = FASE.modelos[G.sequencia[G.spawned % FASE.modelos.length]];
       const c = gerarConta(modelo);
       if (c) {
         G.naves.push({ ini: now, queda: quedaDo(modelo), c, fim: false, corH: ri(0, 360), modelo: modelo });
@@ -565,16 +565,32 @@
         G.ajuda = true;  
         G.tremor = 400;
         som(160, 0.5, 'sawtooth');
-        msg(G.isBoss ? 'A NAVE-MÃE CHEGOU! A TERRA ESTÁ PERDIDA!' : 'Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
+        
+        if (G.isBoss) {
+          msg('A NAVE-MÃE ATINGIU A CABINE! Outra nave-mãe está descendo!', '#f87171');
+          // Se o aluno ainda tem vidas no chefão, permite descer outra Nave-Mãe
+          if (G.vidas > 0) {
+            G.spawned--; 
+            G.proxSpawn = now + 1000;
+          }
+        } else {
+          msg('Uma nave chegou à cabine! Você perdeu uma vida.', '#f87171');
+        }
         hud();
       }
     });
     G.naves = G.naves.filter(n => !n.fim);
 
+    // 1. Se acabou as vidas, é DERROTA imediata (mesmo no chefão)
     if (G.vidas <= 0) return fimDeJogo();
-    if (G.destruidas + G.invadidas >= FASE.naves) return fimDaFase();
+    
+    // 2. CONDIÇÃO DE VITÓRIA CORRIGIDA:
+    // Só passa de fase se todas as naves necessárias tiverem sido DESTRUÍDAS pelo tiro do jogador.
+    // Invasão (deixar a nave cair) NUNCA conta para a vitória!
+    if (G.destruidas >= FASE.naves) {
+      return fimDaFase();
+    }
   }
-
   /* ---------- Resposta ---------- */
   function responder(v) {
     const agora = tempo();
