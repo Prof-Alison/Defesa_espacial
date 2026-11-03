@@ -1,0 +1,84 @@
+{
+  "id": "operacao_decimais_2",
+  "titulo": "Operações com decimais (divisão)",
+  "fases": [
+    {
+      "fase": 1,
+      "titulo": "Divisão de inteiro por inteiro com quociente decimal",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 35000,
+      "quedaMs": 35000,
+      "quedaFacilMs": 42000,
+      "modelos": [
+        { "id": "D1A", "operacao": "/", "a": { "min": 10, "max": 99, "casas": 0 }, "b": { "min": 2, "max": 9, "casas": 0 }, "quociente": { "casasMax": 1, "exigirDecimal": true } },
+        { "id": "D1B", "operacao": "/", "a": { "min": 2, "max": 20, "casas": 0 }, "b": { "min": 2, "max": 9, "casas": 0 }, "quociente": { "casasMax": 1, "exigirDecimal": true } }
+      ]
+    },
+    {
+      "fase": 2,
+      "titulo": "Divisão de inteiro por decimal",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 35000,
+      "quedaMs": 35000,
+      "quedaFacilMs": 42000,
+      "modelos": [
+        { "id": "D2A", "operacao": "/", "a": { "min": 1, "max": 50, "casas": 0 }, "b": { "min": 0.2, "max": 0.9, "casas": 1 }, "quociente": { "casasMax": 2 } },
+        { "id": "D2B", "operacao": "/", "a": { "min": 1, "max": 30, "casas": 0 }, "b": { "min": 0.5, "max": 2.5, "casas": 1 }, "quociente": { "casasMax": 2 } }
+      ]
+    },
+    {
+      "fase": 3,
+      "titulo": "Divisão de decimal por inteiro",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 35000,
+      "quedaMs": 35000,
+      "quedaFacilMs": 42000,
+      "modelos": [
+        { "id": "D3A", "operacao": "/", "a": { "min": 1.0, "max": 99.9, "casas": 1 }, "b": { "min": 2, "max": 9, "casas": 0 }, "quociente": { "casasMax": 2 } },
+        { "id": "D3B", "operacao": "/", "a": { "min": 0.10, "max": 9.99, "casas": 2 }, "b": { "min": 2, "max": 9, "casas": 0 }, "quociente": { "casasMax": 2 } }
+      ]
+    },
+    {
+      "fase": 4,
+      "titulo": "Divisão de decimal por decimal (mesma quantidade de casas)",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 38000,
+      "quedaMs": 38000,
+      "quedaFacilMs": 45000,
+      "modelos": [
+        { "id": "D4A", "operacao": "/", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.1, "max": 0.9, "casas": 1 }, "quociente": { "casasMax": 2 } },
+        { "id": "D4B", "operacao": "/", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 1.1, "max": 4.9, "casas": 1 }, "quociente": { "casasMax": 2 } }
+      ]
+    },
+    {
+      "fase": 5,
+      "titulo": "Divisão de decimal por decimal (casas diferentes)",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 38000,
+      "quedaMs": 38000,
+      "quedaFacilMs": 45000,
+      "modelos": [
+        { "id": "D5A", "operacao": "/", "a": { "min": 1.00, "max": 9.99, "casas": 2 }, "b": { "min": 0.1, "max": 0.9, "casas": 1 }, "quociente": { "casasMax": 2 } },
+        { "id": "D5B", "operacao": "/", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.10, "max": 0.90, "casas": 2 }, "quociente": { "casasMax": 2 } }
+      ]
+    },
+    {
+      "fase": 6,
+      "titulo": "Divisão de decimais com dividendo menor que o divisor",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 40000,
+      "quedaMs": 40000,
+      "quedaFacilMs": 48000,
+      "modelos": [
+        { "id": "D6A", "operacao": "/", "a": { "min": 0.1, "max": 0.9, "casas": 1 }, "b": { "min": 1.0, "max": 9.9, "casas": 1 }, "dividendoMenorQueDivisor": true, "quociente": { "casasMax": 2 } },
+        { "id": "D6B", "operacao": "/", "a": { "min": 0.10, "max": 0.99, "casas": 2 }, "b": { "min": 1.0, "max": 9.9, "casas": 1 }, "dividendoMenorQueDivisor": true, "quociente": { "casasMax": 2 } }
+      ]
+    }
+  ]
+}

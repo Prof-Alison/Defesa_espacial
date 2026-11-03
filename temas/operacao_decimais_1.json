@@ -1,0 +1,62 @@
+{
+  "id": "operacao_decimais_1",
+  "titulo": "Operações com decimais (adição, subtração e multiplicação)",
+  "fases": [
+    {
+      "fase": 1,
+      "titulo": "Adição e subtração com 1 casa decimal",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 28000,
+      "quedaMs": 28000,
+      "quedaFacilMs": 35000,
+      "resultadoNaoNegativo": true,
+      "modelos": [
+        { "id": "1A", "operacao": "+", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.1, "max": 9.9, "casas": 1 } },
+        { "id": "1B", "operacao": "-", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.1, "max": 9.9, "casas": 1 } }
+      ]
+    },
+    {
+      "fase": 2,
+      "titulo": "Adição e subtração com decimais variados",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 32000,
+      "quedaMs": 32000,
+      "quedaFacilMs": 40000,
+      "resultadoNaoNegativo": true,
+      "modelos": [
+        { "id": "2A", "operacao": "+", "a": { "min": 0.1, "max": 9.9, "casas": 1 }, "b": { "min": 0.01, "max": 0.99, "casas": 2 } },
+        { "id": "2B", "operacao": "+", "a": { "min": 1, "max": 30, "casas": 0 }, "b": { "min": 0.1, "max": 9.9, "casas": 1 } },
+        { "id": "2C", "operacao": "-", "a": { "min": 1.00, "max": 9.99, "casas": 2 }, "b": { "min": 0.1, "max": 4.9, "casas": 1 } },
+        { "id": "2D", "operacao": "-", "a": { "min": 10.0, "max": 29.9, "casas": 1 }, "b": { "min": 0.5, "max": 9.9, "casas": 1 } }
+      ]
+    },
+    {
+      "fase": 3,
+      "titulo": "Multiplicação: decimal × inteiro",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 35000,
+      "quedaMs": 35000,
+      "quedaFacilMs": 42000,
+      "modelos": [
+        { "id": "3A", "operacao": "*", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 2, "max": 9, "casas": 0 } },
+        { "id": "3B", "operacao": "*", "a": { "min": 0.10, "max": 0.99, "casas": 2 }, "b": { "min": 2, "max": 9, "casas": 0 } }
+      ]
+    },
+    {
+      "fase": 4,
+      "titulo": "Multiplicação: decimal × decimal",
+      "naves": 6,
+      "vidas": 3,
+      "intervaloMs": 38000,
+      "quedaMs": 38000,
+      "quedaFacilMs": 45000,
+      "modelos": [
+        { "id": "4A", "operacao": "*", "a": { "min": 0.1, "max": 2.9, "casas": 1 }, "b": { "min": 0.1, "max": 2.9, "casas": 1 } },
+        { "id": "4B", "operacao": "*", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.1, "max": 0.9, "casas": 1 } }
+      ]
+    }
+  ]
+}
