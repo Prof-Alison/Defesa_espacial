@@ -7,9 +7,9 @@
       "titulo": "Adição e subtração com 1 casa decimal",
       "naves": 6,
       "vidas": 3,
-      "intervaloMs": 45000,
-      "quedaMs": 45000,
-      "quedaFacilMs": 55000,
+      "intervaloMs": 80000,
+      "quedaMs": 80000,
+      "quedaFacilMs": 100000,
       "resultadoNaoNegativo": true,
       "modelos": [
         { "id": "1A", "operacao": "+", "a": { "min": 1.0, "max": 9.9, "casas": 1 }, "b": { "min": 0.1, "max": 9.9, "casas": 1 } },
