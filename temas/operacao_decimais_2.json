@@ -7,9 +7,9 @@
       "titulo": "Divisão de inteiro por inteiro com quociente decimal",
       "naves": 6,
       "vidas": 3,
-      "intervaloMs": 60000,
-      "quedaMs": 60000,
-      "quedaFacilMs": 75000,
+      "intervaloMs": 120000,
+      "quedaMs": 120000,
+      "quedaFacilMs": 175000,
       "modelos": [
         { "id": "D1A", "operacao": "/", "a": { "min": 10, "max": 99, "casas": 0 }, "b": { "min": 2, "max": 9, "casas": 0 }, "quociente": { "casasMax": 1, "exigirDecimal": true } },
         { "id": "D1B", "operacao": "/", "a": { "min": 2, "max": 20, "casas": 0 }, "b": { "min": 2, "max": 9, "casas": 0 }, "quociente": { "casasMax": 1, "exigirDecimal": true } }
